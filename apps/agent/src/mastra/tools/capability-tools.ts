@@ -20,7 +20,10 @@ export const systemCapabilities: Capability[] = [
   {
     name: 'Property search',
     description: 'Find and read your listings by text, zone, price, bedrooms, or status.',
-    examples: ['¿Qué pisos tengo en Chamberí por debajo de 300.000?', 'Muéstrame la propiedad REF-104'],
+    examples: [
+      '¿Qué pisos tengo en Chamberí por debajo de 300.000?',
+      'Muéstrame la propiedad REF-104',
+    ],
     status: 'available',
   },
   {
@@ -37,7 +40,7 @@ export const systemCapabilities: Capability[] = [
   },
   {
     name: 'Client editing',
-    description: 'Update a client\'s name, email, or interest level.',
+    description: "Update a client's name, email, or interest level.",
     examples: ['Marca a Juan como cliente caliente', 'Añade el email de Marta'],
     status: 'available',
   },
@@ -70,7 +73,8 @@ export const systemCapabilities: Capability[] = [
   },
   {
     name: 'Video generation',
-    description: 'Property video reels. Not implemented yet — only text content is available today.',
+    description:
+      'Property video reels. Not implemented yet — only text content is available today.',
     examples: [],
     status: 'preview',
   },

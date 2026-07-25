@@ -48,7 +48,13 @@ export function signInternalRequest(secret: string, input: SignInput): InternalS
   const nonce = input.nonce ?? randomUUID()
   const signature = digest(
     secret,
-    canonicalPayload({ timestamp, nonce, method: input.method, path: input.path, body: input.body }),
+    canonicalPayload({
+      timestamp,
+      nonce,
+      method: input.method,
+      path: input.path,
+      body: input.body,
+    }),
   )
   return { timestamp, nonce, signature }
 }

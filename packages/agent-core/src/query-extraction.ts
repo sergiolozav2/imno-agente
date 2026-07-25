@@ -11,7 +11,9 @@ export function extractPropertyQuery(text: string): PropertySearchQuery {
   const query: PropertySearchQuery = { text: normalized, limit: 5 }
 
   // Listing reference like "101 Palm Ave" / "Ref 22B" — a leading number + words.
-  const refMatch = normalized.match(/\b\d+[a-z]?\s+[A-Za-zÁÉÍÓÚÑáéíóúñ.'-]+(?:\s+[A-Za-zÁÉÍÓÚÑáéíóúñ.'-]+)?/)
+  const refMatch = normalized.match(
+    /\b\d+[a-z]?\s+[A-Za-zÁÉÍÓÚÑáéíóúñ.'-]+(?:\s+[A-Za-zÁÉÍÓÚÑáéíóúñ.'-]+)?/,
+  )
   if (refMatch) {
     query.reference = refMatch[0].trim()
   }

@@ -1,9 +1,5 @@
 import { type SafeError, type InboundMessage } from '@imno/contracts'
-import {
-  type DataGateway,
-  type TenantContext,
-  classifyHighIntentDeterministic,
-} from '@imno/domain'
+import { type DataGateway, type TenantContext, classifyHighIntentDeterministic } from '@imno/domain'
 import { type AgentModelService, type IntentLevel } from './model-service'
 import { extractPropertyQuery } from './query-extraction'
 import { noMatchReply } from './copy'

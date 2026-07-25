@@ -26,7 +26,10 @@ export function stripWhatsAppSuffix(raw: string): string {
  * Returns INVALID_PHONE for empty/unsupported input. Identity is
  * `(tenantId, e164)` — the same e164 may exist across tenants.
  */
-export function normalizePhone(raw: string, tenantCountry: string): Result<NormalizedPhone, SafeError> {
+export function normalizePhone(
+  raw: string,
+  tenantCountry: string,
+): Result<NormalizedPhone, SafeError> {
   const cleaned = stripWhatsAppSuffix(raw ?? '')
   if (!cleaned) {
     return err({ code: ErrorCode.InvalidPhone, message: 'Empty phone input.' })

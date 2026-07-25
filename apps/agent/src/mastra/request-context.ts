@@ -56,7 +56,10 @@ export interface ToolExecutionContext {
 }
 
 /** Read a required context value, failing loudly rather than defaulting. */
-export function requireContextValue(context: ToolExecutionContext | undefined, key: string): string {
+export function requireContextValue(
+  context: ToolExecutionContext | undefined,
+  key: string,
+): string {
   const value = context?.requestContext?.get(key)
   if (typeof value !== 'string' || value.length === 0) {
     throw new Error(`Missing required request context value: ${key}`)

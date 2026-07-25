@@ -18,10 +18,7 @@ export interface ZonalPriceQuery {
  * Exact tenant-scoped lookup by (tenant, zone, pricing unit). Returns the
  * stored record or null. Never estimates or fabricates a value.
  */
-export function lookupZonalPrice(
-  prices: ZonalPrice[],
-  query: ZonalPriceQuery,
-): ZonalPrice | null {
+export function lookupZonalPrice(prices: ZonalPrice[], query: ZonalPriceQuery): ZonalPrice | null {
   const zone = normalizeZone(query.zone)
   return (
     prices.find(

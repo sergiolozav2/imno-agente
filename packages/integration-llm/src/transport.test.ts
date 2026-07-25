@@ -58,7 +58,9 @@ describe('createModelTransport', () => {
   })
 
   it('returns MODEL_FAILURE when fetch rejects', async () => {
-    globalThis.fetch = vi.fn().mockRejectedValue(new Error('network down')) as unknown as typeof fetch
+    globalThis.fetch = vi
+      .fn()
+      .mockRejectedValue(new Error('network down')) as unknown as typeof fetch
 
     const transport = createModelTransport(config)
     const result = await transport.generateStructured({

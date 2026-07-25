@@ -26,7 +26,9 @@ export function verifyWebhookAuth(provided: string | null | undefined, expected:
  * A Product_System outbound echo: the provider marks the event as sent by the
  * connected account. Echoes create zero buyer messages and zero work items.
  */
-export function isOutboundEcho(input: Pick<EvolutionWebhookInput, 'fromConnectedAccount'>): boolean {
+export function isOutboundEcho(
+  input: Pick<EvolutionWebhookInput, 'fromConnectedAccount'>,
+): boolean {
   return input.fromConnectedAccount === true
 }
 

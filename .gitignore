@@ -2,6 +2,7 @@
 node_modules/
 .pnp
 .pnp.js
+.pnpm-store/
 
 # build outputs
 dist/
@@ -22,6 +23,12 @@ apps/*/.wrangler/
 # local media + video temp
 /media/
 .tmp/
+
+# mastra local state (agent memory db, studio build output)
+.mastra/
+
+# operator-selected WhatsApp instance (holds an instance-scoped token)
+/.system-whatsapp.json
 
 # testing
 coverage/

@@ -23,7 +23,7 @@ const messageShape = z.object({
 export const findConversationsTool = createTool({
   id: 'find-conversations',
   description:
-    'List the agency\'s buyer conversations, most recently updated first. Filter by client id or channel.',
+    "List the agency's buyer conversations, most recently updated first. Filter by client id or channel.",
   inputSchema: z.object({
     clientId: z.string().optional(),
     channel: z.enum(['whatsapp', 'web-chat']).optional(),

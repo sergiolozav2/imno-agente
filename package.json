@@ -46,6 +46,9 @@
     "zod": "3.25.76"
   },
   "pnpm": {
+    "overrides": {
+      "zod": "3.25.76"
+    },
     "onlyBuiltDependencies": [
       "esbuild",
       "nx",

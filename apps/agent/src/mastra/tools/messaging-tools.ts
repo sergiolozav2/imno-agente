@@ -15,7 +15,7 @@ import { optionalContextValue, tenantIdFrom, type ToolExecutionContext } from '.
 export const sendWhatsAppMessageTool = createTool({
   id: 'send-whatsapp-message',
   description: [
-    'Send a WhatsApp message to one of the agency\'s buyer clients and record it in their conversation.',
+    "Send a WhatsApp message to one of the agency's buyer clients and record it in their conversation.",
     'Resolve the person with find-clients first to get their id.',
     'Draft the text, show it to the user, and only send once they agree.',
   ].join(' '),

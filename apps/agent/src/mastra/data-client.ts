@@ -46,9 +46,10 @@ export async function callDataOperation<T = unknown>(
       signal: controller.signal,
     })
 
-    const payload = (await response.json().catch(() => null)) as
-      | { data?: T; error?: { code?: string; message?: string } }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      data?: T
+      error?: { code?: string; message?: string }
+    } | null
 
     if (!response.ok) {
       const detail = payload?.error?.message ?? payload?.error?.code ?? `status ${response.status}`

@@ -22,7 +22,7 @@ const clientShape = z.object({
 export const findClientsTool = createTool({
   id: 'find-clients',
   description:
-    'Search the agency\'s buyer clients by name, email, or phone, optionally filtered by lead status (Cold, Warm, Hot). Use this to resolve a person mentioned by name into a client id.',
+    "Search the agency's buyer clients by name, email, or phone, optionally filtered by lead status (Cold, Warm, Hot). Use this to resolve a person mentioned by name into a client id.",
   inputSchema: z.object({
     text: z.string().optional().describe('Name, email, or phone fragment'),
     leadStatus: z.enum(['Cold', 'Warm', 'Hot']).optional(),
@@ -52,7 +52,7 @@ export const getClientTool = createTool({
 export const updateClientTool = createTool({
   id: 'update-client',
   description:
-    'Update a buyer client\'s name, email, or lead status. Confirm the change with the user before calling this.',
+    "Update a buyer client's name, email, or lead status. Confirm the change with the user before calling this.",
   inputSchema: z.object({
     clientId: z.string(),
     patch: z.object({

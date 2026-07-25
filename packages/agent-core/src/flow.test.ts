@@ -75,12 +75,23 @@ function makeDeps(opts: {
     client,
     recentMessages: [],
   }
-  const updateLeadStatus = vi.fn().mockResolvedValue(opts.leadFails ? err({ code: 'MODEL_FAILURE' }) : ok(undefined))
-  const composePropertyReply = vi.fn().mockResolvedValue(
-    opts.modelFails
-      ? err({ code: 'MODEL_FAILURE' })
-      : ok(opts.reply ?? { answer: 'Grounded answer.', citedPropertyIds: ['prop-101'], intent: 'low', confidence: 0.9 }),
-  )
+  const updateLeadStatus = vi
+    .fn()
+    .mockResolvedValue(opts.leadFails ? err({ code: 'MODEL_FAILURE' }) : ok(undefined))
+  const composePropertyReply = vi
+    .fn()
+    .mockResolvedValue(
+      opts.modelFails
+        ? err({ code: 'MODEL_FAILURE' })
+        : ok(
+            opts.reply ?? {
+              answer: 'Grounded answer.',
+              citedPropertyIds: ['prop-101'],
+              intent: 'low',
+              confidence: 0.9,
+            },
+          ),
+    )
   const model: AgentModelService = { composePropertyReply }
   const deps: AgentFlowDeps = {
     data: {
@@ -148,7 +159,10 @@ describe('runAgentFlow', () => {
   })
 
   it('suppresses AI output while the bot is paused (no model, no lead update)', async () => {
-    const { deps, composePropertyReply, updateLeadStatus } = makeDeps({ facts: [palm], botPaused: true })
+    const { deps, composePropertyReply, updateLeadStatus } = makeDeps({
+      facts: [palm],
+      botPaused: true,
+    })
     const decision = await runAgentFlow(deps, {
       context,
       inbound: inbound('I can pay cash this week'),

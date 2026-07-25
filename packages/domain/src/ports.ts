@@ -1,12 +1,6 @@
 import type { LeadStatus, Result, SafeError } from '@imno/contracts'
 import type { TenantContext } from './tenant-context'
-import type {
-  BuyerClient,
-  Conversation,
-  Message,
-  Property,
-  PropertyFact,
-} from './entities'
+import type { BuyerClient, Conversation, Message, Property, PropertyFact } from './entities'
 
 /**
  * Framework-neutral ports. Adapters (Payload, Evolution, the configured model,
@@ -57,7 +51,10 @@ export interface LeadStatusUpdate {
 
 /** Tenant-scoped data access. Adapters add the tenant predicate internally. */
 export interface DataGateway {
-  getConversation(context: TenantContext, conversationId: string): Promise<Result<Conversation, SafeError>>
+  getConversation(
+    context: TenantContext,
+    conversationId: string,
+  ): Promise<Result<Conversation, SafeError>>
   getClient(context: TenantContext, clientId: string): Promise<Result<BuyerClient, SafeError>>
   loadConversationContext(
     context: TenantContext,
@@ -69,7 +66,10 @@ export interface DataGateway {
   ): Promise<Result<PropertyFact[], SafeError>>
   getProperty(context: TenantContext, propertyId: string): Promise<Result<Property, SafeError>>
   appendMessage(context: TenantContext, message: NewMessage): Promise<Result<Message, SafeError>>
-  updateLeadStatus(context: TenantContext, update: LeadStatusUpdate): Promise<Result<void, SafeError>>
+  updateLeadStatus(
+    context: TenantContext,
+    update: LeadStatusUpdate,
+  ): Promise<Result<void, SafeError>>
 }
 
 export interface OutboundChannelMessage {

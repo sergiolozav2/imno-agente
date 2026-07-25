@@ -81,13 +81,15 @@ export function loadMastraConfig(): MastraRuntimeConfig {
 
   const rawModel = process.env.LLM_MODEL ?? 'deepseek-chat'
   // Accept either a bare provider model name or a full router id.
-  const model = process.env.MASTRA_MODEL ?? (rawModel.includes('/') ? rawModel : `deepseek/${rawModel}`)
+  const model =
+    process.env.MASTRA_MODEL ?? (rawModel.includes('/') ? rawModel : `deepseek/${rawModel}`)
 
   return {
     model,
     apiBaseUrl: (process.env.API_URL ?? 'http://localhost:3001').replace(/\/$/, ''),
     internalSecret: process.env.INTERNAL_SERVICE_SECRET ?? '',
-    storageUrl: process.env.MASTRA_STORAGE_URL ?? `file:${resolve(repoRoot, '.mastra/agent-memory.db')}`,
+    storageUrl:
+      process.env.MASTRA_STORAGE_URL ?? `file:${resolve(repoRoot, '.mastra/agent-memory.db')}`,
     defaultLanguage: process.env.CONTENT_DEFAULT_LANGUAGE ?? 'es',
   }
 }

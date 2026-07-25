@@ -152,9 +152,7 @@ export const readPastSessionTool = createTool({
     z.object({
       threadId: z.string(),
       title: z.string(),
-      messages: z.array(
-        z.object({ role: z.string(), text: z.string(), createdAt: z.string() }),
-      ),
+      messages: z.array(z.object({ role: z.string(), text: z.string(), createdAt: z.string() })),
     }),
     z.object({ error: z.string() }),
   ]),

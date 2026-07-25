@@ -143,7 +143,7 @@ const draftContentStep = createStep({
 export const socialContentWorkflow = createWorkflow({
   id: 'generate-social-content',
   description:
-    'Generate social-media content (title, description, caption, hashtags) for one of the agency\'s properties. Text only; video is not supported yet.',
+    "Generate social-media content (title, description, caption, hashtags) for one of the agency's properties. Text only; video is not supported yet.",
   inputSchema: workflowInputSchema,
   outputSchema: workflowOutputSchema,
   requestContextSchema: agentRequestContextSchema,

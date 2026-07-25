@@ -29,9 +29,12 @@ const propertyShape = z.object({
 export const findPropertiesTool = createTool({
   id: 'find-properties',
   description:
-    'Search the agency\'s own property listings by free text, zone, price range, bedrooms, or status. Use this before answering any question about what is available.',
+    "Search the agency's own property listings by free text, zone, price range, bedrooms, or status. Use this before answering any question about what is available.",
   inputSchema: z.object({
-    text: z.string().optional().describe('Free text to match against reference, title, zone, or description'),
+    text: z
+      .string()
+      .optional()
+      .describe('Free text to match against reference, title, zone, or description'),
     zone: z.string().optional().describe('Neighbourhood or area name'),
     status: z.enum(['available', 'reserved', 'sold']).optional(),
     minBedrooms: z.number().optional(),
@@ -55,10 +58,7 @@ export const getPropertyTool = createTool({
   inputSchema: z.object({
     propertyId: z.string().describe('Property id returned by find-properties'),
   }),
-  outputSchema: z.union([
-    z.object({ property: propertyShape }),
-    z.object({ error: z.string() }),
-  ]),
+  outputSchema: z.union([z.object({ property: propertyShape }), z.object({ error: z.string() })]),
   execute: async ({ propertyId }, context) => {
     const tenantId = tenantIdFrom(context as ToolExecutionContext)
     return dataOperationOrError(tenantId, 'properties.get', { propertyId })
