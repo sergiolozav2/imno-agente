@@ -1,5 +1,6 @@
 import js from '@eslint/js'
 import tseslint from 'typescript-eslint'
+import reactHooks from 'eslint-plugin-react-hooks'
 
 /**
  * Framework-neutral packages that must not import UI/runtime frameworks.
@@ -69,6 +70,14 @@ export default tseslint.config(
         },
       ],
       '@typescript-eslint/no-empty-object-type': 'warn',
+    },
+  },
+  {
+    files: ['apps/frontend/src/**/*.{ts,tsx}', 'apps/api/src/**/*.tsx'],
+    plugins: { 'react-hooks': reactHooks },
+    rules: {
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
     },
   },
   {

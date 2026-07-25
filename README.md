@@ -1,7 +1,9 @@
 # Imno Agente
 
-Nx + pnpm monorepo scaffold. Everything here is structural: the projects exist,
-resolve each other, typecheck, lint and test, but contain no business logic yet.
+Multi-tenant real estate AI agent workspace: a property catalogue, a lead CRM,
+and an AI assistant that talks to buyers over WhatsApp and a public web chat.
+
+`SPECS.md` describes the product, the data model and the conventions in detail.
 
 ## Requirements
 
@@ -22,7 +24,7 @@ pnpm dev:api          # admin panel at http://localhost:3001/admin
 
 | Path                      | Purpose                                        |
 | ------------------------- | ---------------------------------------------- |
-| `apps/frontend`           | Next 15 + Tailwind 4 public app (port 3000)    |
+| `apps/frontend`           | Next 15 web app + BFF (port 3000)              |
 | `apps/api`                | Next 15 API + Payload CMS on D1/R2 (port 3001) |
 | `apps/agent`              | Mastra agent worker (port 3002)                |
 | `packages/contracts`      | Zod schemas and shared types                   |
@@ -70,6 +72,34 @@ field is assigned server-side rather than trusted from the client.
 After changing a collection, run `pnpm db:migrate:create` followed by
 `pnpm db:setup`, then `pnpm generate:types`.
 
+### Frontend
+
+The web app is Spanish-only and never talks to Payload directly. Route handlers
+under `apps/frontend/src/app/api/*` act as a same-origin BFF: they forward the
+`payload-token` cookie to `apps/api`, so the CMS origin stays private.
+
+| Route                                    | Purpose                      |
+| ---------------------------------------- | ---------------------------- |
+| `/`                                      | Marketing landing            |
+| `/login`                                 | Email + password             |
+| `/chat/:publicChatKey`                   | Public buyer chat widget     |
+| `/app/:tenantSlug/properties`            | Listing catalogue            |
+| `/app/:tenantSlug/clients`               | Lead list, table or kanban   |
+| `/app/:tenantSlug/conversations`         | Conversation history         |
+| `/app/:tenantSlug/content`               | AI copy and video generation |
+| `/app/:tenantSlug/settings/integrations` | WhatsApp QR pairing          |
+
+Next only reads env files from the app directory, so `apps/frontend/.env.local`
+is a symlink to the root `.env`:
+
+```bash
+ln -sfn ../../.env apps/frontend/.env.local
+```
+
+Styling is Tailwind 4 `@theme` tokens plus a hand-written component layer in
+`src/app/globals.css` (`.btn`, `.card`, `.badge`, `.sidebar-*`). There is no
+component library and no dark mode.
+
 ### Local Evolution (WhatsApp) stack
 
 | Script             | What it does                                       |
@@ -86,5 +116,6 @@ Evolution listens on http://localhost:8081 and reaches host services through
 
 - ESLint forbids `contracts`, `domain`, `*-core` and `runtime-config` from
   importing Next, React, Payload, Mastra or any `integration-*` package.
+- The browser calls the frontend BFF only; Payload is never a public origin.
 - Nx caches `build`, `typecheck`, `lint` and `test`.
 - `.env` is gitignored; keep `.env.sample` in sync when adding variables.
