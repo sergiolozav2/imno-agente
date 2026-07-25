@@ -1,0 +1,32 @@
+{
+  "name": "@imno/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start -p 3001",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@imno/agent-core": "workspace:*",
+    "@imno/content-core": "workspace:*",
+    "@imno/contracts": "workspace:*",
+    "@imno/domain": "workspace:*",
+    "@imno/integration-evolution": "workspace:*",
+    "@imno/integration-ffmpeg": "workspace:*",
+    "@imno/integration-llm": "workspace:*",
+    "@imno/runtime-config": "workspace:*",
+    "@imno/test-support": "workspace:*",
+    "next": "15.5.21",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260722.1",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.2",
+    "wrangler": "4.114.0"
+  }
+}

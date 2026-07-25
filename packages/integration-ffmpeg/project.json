@@ -1,0 +1,33 @@
+{
+  "name": "integration-ffmpeg",
+  "sourceRoot": "packages/integration-ffmpeg/src",
+  "projectType": "library",
+  "tags": ["type:integration", "scope:shared"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p packages/integration-ffmpeg/tsconfig.json --noEmit"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p packages/integration-ffmpeg/tsconfig.json --noEmit"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint packages/integration-ffmpeg/src"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run",
+        "cwd": "packages/integration-ffmpeg"
+      }
+    }
+  }
+}

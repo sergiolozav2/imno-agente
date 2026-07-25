@@ -1,0 +1,40 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# build outputs
+dist/
+build/
+out/
+.next/
+.open-next/
+*.tsbuildinfo
+
+# nx
+.nx/cache
+.nx/workspace-data
+
+# cloudflare / wrangler generated state
+.wrangler/
+apps/*/.wrangler/
+
+# local media + video temp
+/media/
+.tmp/
+
+# testing
+coverage/
+test-results/
+playwright-report/
+
+# local env files (never commit real secrets)
+.env
+.env.*.local
+.env.local
+
+# editor / os
+.DS_Store
+.idea/
+*.log
+npm-debug.log*

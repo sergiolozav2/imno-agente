@@ -1,0 +1,49 @@
+{
+  "name": "imnoagente",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Multi-tenant real estate AI agent workspace.",
+  "packageManager": "pnpm@10.30.3",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "lint": "nx run-many -t lint",
+    "typecheck": "nx run-many -t typecheck",
+    "build": "nx run-many -t build",
+    "test": "nx run-many -t test",
+    "graph": "nx graph",
+    "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,json,md}\"",
+    "dev:api": "nx dev api",
+    "dev:agent": "nx serve agent",
+    "dev:frontend": "nx dev frontend",
+    "dev": "nx run-many -t dev serve --parallel=3",
+    "stack:up": "docker compose up -d --wait",
+    "stack:down": "docker compose down",
+    "stack:logs": "docker compose logs -f",
+    "stack:reset": "docker compose down -v"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.17.0",
+    "@types/node": "22.14.1",
+    "eslint": "9.17.0",
+    "nx": "21.2.2",
+    "prettier": "3.4.2",
+    "tsx": "4.19.2",
+    "typescript": "5.7.3",
+    "typescript-eslint": "8.19.1",
+    "vite-tsconfig-paths": "5.1.4",
+    "vitest": "3.2.4",
+    "zod": "3.25.76"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "nx",
+      "@swc/core",
+      "sharp",
+      "workerd"
+    ]
+  }
+}

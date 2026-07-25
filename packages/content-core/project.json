@@ -1,0 +1,33 @@
+{
+  "name": "content-core",
+  "sourceRoot": "packages/content-core/src",
+  "projectType": "library",
+  "tags": ["type:use-case", "scope:content"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p packages/content-core/tsconfig.json --noEmit"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p packages/content-core/tsconfig.json --noEmit"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint packages/content-core/src"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run",
+        "cwd": "packages/content-core"
+      }
+    }
+  }
+}

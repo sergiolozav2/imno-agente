@@ -1,0 +1,12 @@
+node_modules
+dist
+build
+.next
+.open-next
+.wrangler
+coverage
+test-results
+playwright-report
+pnpm-lock.yaml
+*.tsbuildinfo
+.nx

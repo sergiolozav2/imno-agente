@@ -1,0 +1,14 @@
+{
+  "name": "local-stack",
+  "sourceRoot": "tools/local-stack",
+  "projectType": "library",
+  "tags": ["type:tool", "scope:shared"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint tools/local-stack --no-error-on-unmatched-pattern"
+      }
+    }
+  }
+}

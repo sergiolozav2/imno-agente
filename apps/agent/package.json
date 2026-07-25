@@ -1,0 +1,17 @@
+{
+  "name": "@imno/agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@imno/agent-core": "workspace:*",
+    "@imno/contracts": "workspace:*",
+    "@imno/domain": "workspace:*",
+    "@imno/integration-llm": "workspace:*",
+    "@imno/runtime-config": "workspace:*",
+    "@mastra/core": "^1.52.1",
+    "@mastra/libsql": "^1.17.0",
+    "@mastra/memory": "^1.23.1",
+    "mastra": "^1.20.1"
+  }
+}
