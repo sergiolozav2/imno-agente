@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { resolveTenant } from '@/lib/auth'
 import { IconArrowLeft } from '@/components/icons'
-import { NewProperty } from './new-property-client'
+import { PropertyForm } from '../property-form'
 
 export default async function NewPropertyPage({
   params,
@@ -29,7 +29,7 @@ export default async function NewPropertyPage({
         </div>
       </div>
 
-      <NewProperty tenantSlug={tenantSlug} tenantId={tenant.tenantId} />
+      <PropertyForm tenantSlug={tenantSlug} tenantId={tenant.tenantId} />
     </div>
   )
 }

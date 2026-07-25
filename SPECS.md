@@ -355,6 +355,8 @@ Evolution webhook
 | `/api/users/login`, `/api/users/logout`, `/api/users/me` | Cookie auth (`payload-token`)                 |
 | `/api/graphql`, `/api/graphql-playground`                | GraphQL                                       |
 | `/api/health`                                            | `{ status: 'ok', service: 'api', timestamp }` |
+| `POST /api/webhooks/evolution`                           | Inbound WhatsApp events (target of `EVOLUTION_WEBHOOK_URL`) |
+| `POST /api/internal/data`                                | HMAC-signed data bridge for the agent runtime |
 
 REST query style used by the frontend:
 `?where[tenant][equals]=3&where[name][like]=ana&depth=1&limit=50&sort=-createdAt`
@@ -363,7 +365,6 @@ REST query style used by the frontend:
 
 | Route                            | Purpose                                                      |
 | -------------------------------- | ------------------------------------------------------------ |
-| `POST /api/webhooks/evolution`   | Inbound WhatsApp events (target of `EVOLUTION_WEBHOOK_URL`)  |
 | `POST /api/public-chat`          | Widget message ingress, authenticated by `X-Internal-Secret` |
 | `POST /api/content/render-video` | ffmpeg render job                                            |
 
@@ -438,7 +439,7 @@ All server-only values; nothing sensitive may carry a `NEXT_PUBLIC_` prefix.
 | `EVOLUTION_WEBHOOK_URL`      | `http://host.docker.internal:3001/api/webhooks/evolution` | Callback target                            |
 | `LLM_ADAPTER`                | `default`                                                 | Provider selector                          |
 | `LLM_API_KEY`                | —                                                         | Model key                                  |
-| `LLM_MODEL`                  | `deepseek-chat`                                           | Model name                                 |
+| `LLM_MODEL`                  | `deepseek-v4-pro`                                         | Model name                                 |
 | `LLM_BASE_URL`               | `https://api.deepseek.com`                                | Model endpoint                             |
 | `CONTENT_DEFAULT_LANGUAGE`   | `es`                                                      | Generated content language                 |
 | `VIDEO_FFMPEG_PATH`          | `ffmpeg`                                                  | ffmpeg binary                              |
@@ -560,13 +561,15 @@ export async function handleInboundMessage(
 
 ## 10. Roadmap
 
-**Now** — Payload schema, tenant isolation, migrations, frontend dashboard and BFF.
+**Now** — Payload schema, tenant isolation, migrations, frontend dashboard and BFF,
+inbound WhatsApp ingress with receipt-based deduplication, and the Mastra agent
+replying over WhatsApp through the internal data bridge.
 
 **Next**
 
-- `POST /api/webhooks/evolution` with receipt-based deduplication.
-- Mastra agent: retrieval over `properties` + `zonal-prices`, reply generation,
-  respect for `botPaused`.
+- Retry sweep for `message-processing` rows left in `pending` / `failed` (ingress
+  currently replies inline and best-effort).
+- Retrieval over `zonal-prices` alongside `properties`.
 - `POST /api/public-chat` with `allowedOrigins` enforcement.
 - Fill in `contracts` / `domain` / `runtime-config` so validation is shared
   rather than duplicated per app.

@@ -57,7 +57,7 @@ export async function runSystemChat(input: SystemChatInput): Promise<SystemChatR
   })
 
   return {
-    text: response.text ?? '',
+    text: finalText(response),
     threadId,
     toolCalls: collectToolNames(response),
   }
@@ -143,7 +143,7 @@ export async function runClientReply(input: ClientReplyInput): Promise<ClientRep
   const leadStatus = extractLeadStatus(response)
 
   return {
-    text: response.text ?? '',
+    text: finalText(response),
     threadId,
     ...(leadStatus ? { leadStatus } : {}),
     toolCalls: collectToolNames(response),
@@ -154,21 +154,56 @@ interface ToolResultLike {
   toolName?: unknown
   result?: unknown
   output?: unknown
+  /** Mastra wraps tool chunks in `payload`; older shapes were flat. */
+  payload?: { toolName?: unknown; result?: unknown; output?: unknown }
 }
 
 interface GenerateResponseLike {
   text?: unknown
   toolResults?: unknown
+  steps?: unknown
 }
 
-function toolResultsOf(response: unknown): ToolResultLike[] {
+/**
+ * The text to actually send as one reply.
+ *
+ * A tool-using turn produces text in several steps — typically a filler line
+ * ("let me check that for you") before each tool call and the real answer last.
+ * The aggregate `text` field concatenates all of them, which on WhatsApp reads
+ * as the agent repeating itself, so take the last step that produced text and
+ * fall back to the aggregate only for single-step turns.
+ */
+function finalText(response: unknown): string {
+  const steps = (response as GenerateResponseLike | undefined)?.steps
+  if (Array.isArray(steps)) {
+    for (let index = steps.length - 1; index >= 0; index -= 1) {
+      const text = (steps[index] as { text?: unknown } | undefined)?.text
+      if (typeof text === 'string' && text.trim().length > 0) {
+        return text.trim()
+      }
+    }
+  }
+  const aggregate = (response as GenerateResponseLike | undefined)?.text
+  return typeof aggregate === 'string' ? aggregate.trim() : ''
+}
+
+/** Flatten tool results across both the chunk shape and the legacy flat shape. */
+function toolResultsOf(response: unknown): { toolName?: string; result?: unknown }[] {
   const raw = (response as GenerateResponseLike | undefined)?.toolResults
-  return Array.isArray(raw) ? (raw as ToolResultLike[]) : []
+  const entries = Array.isArray(raw) ? (raw as ToolResultLike[]) : []
+  return entries.map((entry) => {
+    const source = entry.payload ?? entry
+    const toolName = source.toolName
+    return {
+      ...(typeof toolName === 'string' ? { toolName } : {}),
+      result: source.result ?? source.output,
+    }
+  })
 }
 
 function collectToolNames(response: unknown): string[] {
   return toolResultsOf(response)
-    .map((entry) => (typeof entry.toolName === 'string' ? entry.toolName : ''))
+    .map((entry) => entry.toolName ?? '')
     .filter((name) => name.length > 0)
 }
 
@@ -178,9 +213,9 @@ function collectToolNames(response: unknown): string[] {
  */
 function extractLeadStatus(response: unknown): string | undefined {
   for (const entry of toolResultsOf(response)) {
-    const payload = (entry.result ?? entry.output) as { leadStatus?: unknown } | undefined
-    if (payload && typeof payload.leadStatus === 'string') {
-      return payload.leadStatus
+    const result = entry.result as { leadStatus?: unknown } | undefined
+    if (result && typeof result.leadStatus === 'string') {
+      return result.leadStatus
     }
   }
   return undefined

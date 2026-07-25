@@ -1,25 +1,29 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { IconUpload } from '@/components/icons'
+import {
+  PRICING_UNITS,
+  PRICING_UNIT_LABELS,
+  PROPERTY_STATUSES,
+  STATUS_LABELS,
+  type MediaAsset,
+  type PricingUnit,
+  type Property,
+  type PropertyStatus,
+} from './property-types'
 
-interface MediaAsset {
-  id: string
-  url: string
-  filename: string
-  kind: string
-}
-
-interface FormData {
+interface PropertyFormState {
   reference: string
   title: string
   description: string
   price: string
   currency: string
   zone: string
-  pricingUnit: 'total' | 'per_sqm' | 'per_month'
-  status: 'available' | 'reserved' | 'sold'
+  pricingUnit: PricingUnit
+  status: PropertyStatus
   bedrooms: string
   bathrooms: string
   areaSqm: string
@@ -28,34 +32,50 @@ interface FormData {
   model3d: string
 }
 
-interface NewPropertyProps {
+interface PropertyFormProps {
   tenantSlug: string
   tenantId: string
+  /** Present when editing; omit to create a new property. */
+  property?: Property
 }
 
-export function NewProperty({ tenantSlug, tenantId }: NewPropertyProps) {
+function initialState(property?: Property): PropertyFormState {
+  return {
+    reference: property?.reference ?? '',
+    title: property?.title ?? '',
+    description: property?.description ?? '',
+    price: property?.price != null ? String(property.price) : '',
+    currency: property?.currency ?? 'EUR',
+    zone: property?.zone ?? '',
+    pricingUnit: property?.pricingUnit ?? 'total',
+    status: property?.status ?? 'available',
+    bedrooms: property?.bedrooms != null ? String(property.bedrooms) : '',
+    bathrooms: property?.bathrooms != null ? String(property.bathrooms) : '',
+    areaSqm: property?.areaSqm != null ? String(property.areaSqm) : '',
+    images: property?.images?.map((image) => String(image.id)) ?? [],
+    mainImage: property?.mainImage ? String(property.mainImage.id) : '',
+    model3d: property?.model3d ? String(property.model3d.id) : '',
+  }
+}
+
+/**
+ * Create / edit form for a property. Both modes land on the property's
+ * detail page once the save succeeds.
+ */
+export function PropertyForm({ tenantSlug, tenantId, property }: PropertyFormProps) {
   const router = useRouter()
+  const isEdit = Boolean(property)
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([])
   const [uploading, setUploading] = useState(false)
 
-  const [formData, setFormData] = useState<FormData>({
-    reference: '',
-    title: '',
-    description: '',
-    price: '',
-    currency: 'EUR',
-    zone: '',
-    pricingUnit: 'total',
-    status: 'available',
-    bedrooms: '',
-    bathrooms: '',
-    areaSqm: '',
-    images: [],
-    mainImage: '',
-    model3d: '',
-  })
+  const [formData, setFormData] = useState<PropertyFormState>(() => initialState(property))
+
+  const cancelHref = isEdit
+    ? `/app/${tenantSlug}/properties/${property!.id}`
+    : `/app/${tenantSlug}/properties`
 
   useEffect(() => {
     async function loadMedia() {
@@ -95,18 +115,11 @@ export function NewProperty({ tenantSlug, tenantId }: NewPropertyProps) {
       const newAsset = await response.json()
       setMediaAssets((prev) => [...prev, newAsset.doc])
 
-      if (formData.images.length === 0) {
-        setFormData((prev) => ({
-          ...prev,
-          images: [...prev.images, newAsset.doc.id],
-          mainImage: newAsset.doc.id,
-        }))
-      } else {
-        setFormData((prev) => ({
-          ...prev,
-          images: [...prev.images, newAsset.doc.id],
-        }))
-      }
+      setFormData((prev) => ({
+        ...prev,
+        images: [...prev.images, newAsset.doc.id],
+        mainImage: prev.images.length === 0 ? newAsset.doc.id : prev.mainImage,
+      }))
     } catch {
       setError('No se pudo subir la imagen')
     } finally {
@@ -146,39 +159,44 @@ export function NewProperty({ tenantSlug, tenantId }: NewPropertyProps) {
         throw new Error('Selecciona una imagen principal')
       }
 
+      // Payload clears a field when it receives null, so edits send null
+      // where creates simply omit the key.
+      const empty = isEdit ? null : undefined
+
       const payload = {
-        tenant: tenantId,
+        ...(isEdit ? {} : { tenant: tenantId }),
         reference: formData.reference,
         title: formData.title,
-        description: formData.description || undefined,
+        description: formData.description || empty,
         price: parseFloat(formData.price),
         currency: formData.currency,
         zone: formData.zone,
         pricingUnit: formData.pricingUnit,
         status: formData.status,
-        bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : undefined,
-        bathrooms: formData.bathrooms ? parseInt(formData.bathrooms) : undefined,
-        areaSqm: formData.areaSqm ? parseFloat(formData.areaSqm) : undefined,
-        images: formData.images.length > 0 ? formData.images : undefined,
-        mainImage: formData.mainImage || undefined,
-        model3d: formData.model3d || undefined,
+        bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : empty,
+        bathrooms: formData.bathrooms ? parseInt(formData.bathrooms) : empty,
+        areaSqm: formData.areaSqm ? parseFloat(formData.areaSqm) : empty,
+        images: formData.images.length > 0 ? formData.images : empty,
+        mainImage: formData.mainImage || empty,
+        model3d: formData.model3d || empty,
       }
 
-      const response = await fetch('/api/properties', {
-        method: 'POST',
+      const response = await fetch(isEdit ? `/api/properties/${property!.id}` : '/api/properties', {
+        method: isEdit ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
 
+      const data = await response.json().catch(() => null)
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'No se pudo crear la propiedad')
+        throw new Error(data?.errors?.[0]?.message || data?.message || 'No se pudo guardar')
       }
 
-      const result = await response.json()
-      router.push(`/app/${tenantSlug}/properties/${result.doc.id}`)
+      const id = isEdit ? property!.id : data?.doc?.id
+      router.push(`/app/${tenantSlug}/properties/${id}`)
+      router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo crear la propiedad')
+      setError(err instanceof Error ? err.message : 'No se pudo guardar')
       setLoading(false)
     }
   }
@@ -199,8 +217,11 @@ export function NewProperty({ tenantSlug, tenantId }: NewPropertyProps) {
           </h3>
 
           <div className="form-group">
-            <label className="form-label">Referencia *</label>
+            <label className="form-label" htmlFor="property-reference">
+              Referencia *
+            </label>
             <input
+              id="property-reference"
               type="text"
               className="form-input"
               value={formData.reference}
@@ -211,8 +232,11 @@ export function NewProperty({ tenantSlug, tenantId }: NewPropertyProps) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Título *</label>
+            <label className="form-label" htmlFor="property-title">
+              Título *
+            </label>
             <input
+              id="property-title"
               type="text"
               className="form-input"
               value={formData.title}
@@ -223,8 +247,11 @@ export function NewProperty({ tenantSlug, tenantId }: NewPropertyProps) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Descripción</label>
+            <label className="form-label" htmlFor="property-description">
+              Descripción
+            </label>
             <textarea
+              id="property-description"
               className="form-textarea"
               value={formData.description}
               onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
@@ -235,8 +262,11 @@ export function NewProperty({ tenantSlug, tenantId }: NewPropertyProps) {
 
           <div className="grid-2" style={{ gap: '1rem' }}>
             <div className="form-group">
-              <label className="form-label">Precio *</label>
+              <label className="form-label" htmlFor="property-price">
+                Precio *
+              </label>
               <input
+                id="property-price"
                 type="number"
                 className="form-input"
                 value={formData.price}
@@ -247,8 +277,11 @@ export function NewProperty({ tenantSlug, tenantId }: NewPropertyProps) {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Moneda</label>
+              <label className="form-label" htmlFor="property-currency">
+                Moneda
+              </label>
               <select
+                id="property-currency"
                 className="form-select"
                 value={formData.currency}
                 onChange={(e) => setFormData((prev) => ({ ...prev, currency: e.target.value }))}
@@ -262,8 +295,11 @@ export function NewProperty({ tenantSlug, tenantId }: NewPropertyProps) {
 
           <div className="grid-2" style={{ gap: '1rem' }}>
             <div className="form-group">
-              <label className="form-label">Zona *</label>
+              <label className="form-label" htmlFor="property-zone">
+                Zona *
+              </label>
               <input
+                id="property-zone"
                 type="text"
                 className="form-input"
                 value={formData.zone}
@@ -274,36 +310,46 @@ export function NewProperty({ tenantSlug, tenantId }: NewPropertyProps) {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Unidad de precio</label>
+              <label className="form-label" htmlFor="property-pricing-unit">
+                Unidad de precio
+              </label>
               <select
+                id="property-pricing-unit"
                 className="form-select"
                 value={formData.pricingUnit}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    pricingUnit: e.target.value as FormData['pricingUnit'],
+                    pricingUnit: e.target.value as PricingUnit,
                   }))
                 }
               >
-                <option value="total">Total</option>
-                <option value="per_sqm">Por m²</option>
-                <option value="per_month">Por mes</option>
+                {PRICING_UNITS.map((unit) => (
+                  <option key={unit} value={unit}>
+                    {PRICING_UNIT_LABELS[unit]}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
 
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Estado</label>
+            <label className="form-label" htmlFor="property-status">
+              Estado
+            </label>
             <select
+              id="property-status"
               className="form-select"
               value={formData.status}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, status: e.target.value as FormData['status'] }))
+                setFormData((prev) => ({ ...prev, status: e.target.value as PropertyStatus }))
               }
             >
-              <option value="available">Disponible</option>
-              <option value="reserved">Reservada</option>
-              <option value="sold">Vendida</option>
+              {PROPERTY_STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {STATUS_LABELS[status]}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -317,8 +363,11 @@ export function NewProperty({ tenantSlug, tenantId }: NewPropertyProps) {
 
             <div className="grid-3" style={{ gap: '1rem' }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Dormitorios</label>
+                <label className="form-label" htmlFor="property-bedrooms">
+                  Dormitorios
+                </label>
                 <input
+                  id="property-bedrooms"
                   type="number"
                   className="form-input"
                   value={formData.bedrooms}
@@ -329,8 +378,11 @@ export function NewProperty({ tenantSlug, tenantId }: NewPropertyProps) {
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Baños</label>
+                <label className="form-label" htmlFor="property-bathrooms">
+                  Baños
+                </label>
                 <input
+                  id="property-bathrooms"
                   type="number"
                   className="form-input"
                   value={formData.bathrooms}
@@ -341,8 +393,11 @@ export function NewProperty({ tenantSlug, tenantId }: NewPropertyProps) {
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Área (m²)</label>
+                <label className="form-label" htmlFor="property-area">
+                  Área (m²)
+                </label>
                 <input
+                  id="property-area"
                   type="number"
                   className="form-input"
                   value={formData.areaSqm}
@@ -385,13 +440,13 @@ export function NewProperty({ tenantSlug, tenantId }: NewPropertyProps) {
             {mediaAssets.length > 0 && (
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 {mediaAssets.map((asset) => {
-                  const isSelected = formData.images.includes(asset.id)
-                  const isMain = formData.mainImage === asset.id
+                  const isSelected = formData.images.includes(String(asset.id))
+                  const isMain = formData.mainImage === String(asset.id)
                   return (
                     <button
                       type="button"
                       key={asset.id}
-                      onClick={() => toggleImageSelection(asset.id)}
+                      onClick={() => toggleImageSelection(String(asset.id))}
                       style={{
                         position: 'relative',
                         cursor: 'pointer',
@@ -449,12 +504,17 @@ export function NewProperty({ tenantSlug, tenantId }: NewPropertyProps) {
             <button type="submit" className="btn btn-primary" disabled={loading}>
               {loading ? (
                 <>
-                  <span className="spinner" /> Creando...
+                  <span className="spinner" /> Guardando...
                 </>
+              ) : isEdit ? (
+                'Guardar cambios'
               ) : (
                 'Crear propiedad'
               )}
             </button>
+            <Link href={cancelHref} className="btn btn-secondary">
+              Cancelar
+            </Link>
           </div>
         </div>
       </div>

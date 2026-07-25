@@ -2,52 +2,21 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { resolveTenant, authFetch } from '@/lib/auth'
 import { getApiUrl } from '@/lib/config'
-import { IconArrowLeft, IconCube, IconSparkles, IconInbox, IconImage } from '@/components/icons'
-
-interface MediaAsset {
-  id: string
-  url: string
-  filename: string
-  kind: 'image' | 'model-3d' | 'video' | 'music'
-}
-
-interface Property {
-  id: string
-  reference: string
-  title: string
-  description?: string
-  price: number
-  currency: string
-  zone: string
-  pricingUnit: 'per_sqm' | 'total' | 'per_month'
-  status: 'available' | 'reserved' | 'sold'
-  bedrooms?: number
-  bathrooms?: number
-  areaSqm?: number
-  images?: MediaAsset[]
-  mainImage?: MediaAsset
-  model3d?: MediaAsset
-}
+import {
+  IconArrowLeft,
+  IconCube,
+  IconSparkles,
+  IconInbox,
+  IconImage,
+  IconPencil,
+} from '@/components/icons'
+import { PRICING_UNIT_LABELS, STATUS_LABELS, statusBadge, type Property } from '../property-types'
 
 interface ZonalPrice {
   id: string
   amount: number
   currency: string
   pricingUnit: string
-}
-
-const STATUS_LABELS: Record<Property['status'], string> = {
-  available: 'Disponible',
-  reserved: 'Reservada',
-  sold: 'Vendida',
-}
-
-function statusBadge(status: Property['status']) {
-  return status === 'available'
-    ? 'badge-success'
-    : status === 'reserved'
-      ? 'badge-warning'
-      : 'badge-error'
 }
 
 async function getProperty(id: string): Promise<Property | null> {
@@ -107,11 +76,7 @@ export default async function PropertyDetailPage({
   const zonalPrice = await getZonalPrice(tenant.tenantId, property.zone)
 
   const pricingLabel =
-    property.pricingUnit === 'total'
-      ? 'Precio total'
-      : property.pricingUnit === 'per_sqm'
-        ? 'Por m²'
-        : 'Por mes'
+    property.pricingUnit === 'total' ? 'Precio total' : PRICING_UNIT_LABELS[property.pricingUnit]
 
   return (
     <div className="container">
@@ -127,7 +92,7 @@ export default async function PropertyDetailPage({
           </p>
         </div>
         <Link href={`/app/${tenantSlug}/properties/${id}/edit`} className="btn btn-secondary">
-          Editar
+          <IconPencil width={16} height={16} /> Editar
         </Link>
       </div>
 

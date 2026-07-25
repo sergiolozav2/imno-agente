@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { resolveTenant } from '@/lib/auth'
 import { IconArrowLeft } from '@/components/icons'
-import { NewClient } from './new-client-client'
+import { ClientForm } from '../client-form'
 
 export default async function NewClientPage({
   params,
@@ -30,7 +30,7 @@ export default async function NewClientPage({
       </div>
 
       <div className="card">
-        <NewClient tenantSlug={tenantSlug} tenantId={tenant.tenantId} />
+        <ClientForm tenantSlug={tenantSlug} tenantId={tenant.tenantId} />
       </div>
     </div>
   )

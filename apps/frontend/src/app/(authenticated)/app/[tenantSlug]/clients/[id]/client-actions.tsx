@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { IconPencil, IconTrash } from '@/components/icons'
-import { EditClientDialog } from '../edit-client-dialog'
 import type { BuyerClient } from '../client-types'
 
 interface ClientActionsProps {
@@ -15,7 +15,6 @@ interface ClientActionsProps {
 /** Edit + delete controls shown on the client profile. */
 export function ClientActions({ client, tenantSlug }: ClientActionsProps) {
   const router = useRouter()
-  const [editing, setEditing] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -41,9 +40,12 @@ export function ClientActions({ client, tenantSlug }: ClientActionsProps) {
   return (
     <>
       <div className="client-actions">
-        <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditing(true)}>
+        <Link
+          href={`/app/${tenantSlug}/clients/${client.id}/edit`}
+          className="btn btn-secondary btn-sm"
+        >
           <IconPencil width={14} height={14} /> Editar
-        </button>
+        </Link>
         <button
           type="button"
           className="btn btn-danger btn-sm"
@@ -55,15 +57,6 @@ export function ClientActions({ client, tenantSlug }: ClientActionsProps) {
           <IconTrash width={14} height={14} /> Eliminar
         </button>
       </div>
-
-      <EditClientDialog
-        client={editing ? client : null}
-        onClose={() => setEditing(false)}
-        onSaved={() => {
-          setEditing(false)
-          router.refresh()
-        }}
-      />
 
       <ConfirmDialog
         open={confirming}

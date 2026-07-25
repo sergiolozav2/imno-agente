@@ -13,7 +13,6 @@ import {
   IconTrash,
   IconUsers,
 } from '@/components/icons'
-import { EditClientDialog } from './edit-client-dialog'
 import {
   LEAD_LABELS,
   LEAD_STATUSES,
@@ -45,7 +44,6 @@ export function ClientsView({ tenantSlug, tenantId, initialClients }: ClientsVie
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const [editing, setEditing] = useState<BuyerClient | null>(null)
   const [deleting, setDeleting] = useState<BuyerClient | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -85,11 +83,6 @@ export function ClientsView({ tenantSlug, tenantId, initialClients }: ClientsVie
     },
     [tenantId],
   )
-
-  function applyUpdate(updated: BuyerClient) {
-    setClients((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)))
-    router.refresh()
-  }
 
   async function changeLeadStatus(client: BuyerClient, leadStatus: LeadStatus) {
     if (client.leadStatus === leadStatus) return
@@ -141,13 +134,14 @@ export function ClientsView({ tenantSlug, tenantId, initialClients }: ClientsVie
   }
 
   const toolbar = (
-    <div className="clients-toolbar">
-      <SearchInput
-        placeholder="Buscar por nombre..."
-        onSearch={handleSearch}
-        loading={searching}
-        width={320}
-      />
+    <div className="list-toolbar">
+      <div className="list-toolbar-search">
+        <SearchInput
+          placeholder="Buscar por nombre..."
+          onSearch={handleSearch}
+          loading={searching}
+        />
+      </div>
       <div className="view-toggle" role="group" aria-label="Modo de vista">
         <button
           type="button"
@@ -175,13 +169,12 @@ export function ClientsView({ tenantSlug, tenantId, initialClients }: ClientsVie
         <Link href={`/app/${tenantSlug}/clients/${client.id}`} className="btn btn-secondary btn-sm">
           Ver
         </Link>
-        <button
-          type="button"
+        <Link
+          href={`/app/${tenantSlug}/clients/${client.id}/edit`}
           className="btn btn-secondary btn-sm"
-          onClick={() => setEditing(client)}
         >
           <IconPencil width={14} height={14} /> Editar
-        </button>
+        </Link>
         <button
           type="button"
           className="btn btn-danger btn-sm"
@@ -328,15 +321,6 @@ export function ClientsView({ tenantSlug, tenantId, initialClients }: ClientsVie
           })}
         </div>
       )}
-
-      <EditClientDialog
-        client={editing}
-        onClose={() => setEditing(null)}
-        onSaved={(updated) => {
-          applyUpdate(updated)
-          setEditing(null)
-        }}
-      />
 
       <ConfirmDialog
         open={Boolean(deleting)}
