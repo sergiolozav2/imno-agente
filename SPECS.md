@@ -449,6 +449,19 @@ All server-only values; nothing sensitive may carry a `NEXT_PUBLIC_` prefix.
 | `VOICE_PROVIDER`             | `unsupported`                                             | Deferred                                   |
 | `IMAGE_ENHANCEMENT_PROVIDER` | `pass-through`                                            | Deferred                                   |
 
+The deployed API runs on Cloudflare Workers, so D1 and R2 arrive as native
+bindings and need no credentials. The two variables below only authenticate
+wrangler's remote bindings, which is how the CLI scripts migrate and seed the
+deployed database from outside a Worker (`CLOUDFLARE_ENV` other than `local`);
+see `apps/api/src/cloudflare` and `DEPLOY.md`.
+
+| Variable                | Default                               | Purpose                       |
+| ----------------------- | ------------------------------------- | ----------------------------- |
+| `CLOUDFLARE_ACCOUNT_ID` | —                                     | Account owning D1 and R2      |
+| `CLOUDFLARE_API_TOKEN`  | —                                     | Token with D1 edit permission |
+| `MASTRA_STORAGE_URL`    | `file:<repo>/.mastra/agent-memory.db` | Agent thread store            |
+| `PORT`                  | —                                     | Overrides the listening port  |
+
 Providers are **named, not hardcoded**: `unsupported` and `pass-through` are
 valid values, so a missing capability fails predictably instead of crashing.
 

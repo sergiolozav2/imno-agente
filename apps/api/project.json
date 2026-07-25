@@ -36,6 +36,20 @@
         "cwd": "apps/api"
       }
     },
+    "build:worker": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "opennextjs-cloudflare build",
+        "cwd": "apps/api"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "opennextjs-cloudflare build && opennextjs-cloudflare deploy -- --env production",
+        "cwd": "apps/api"
+      }
+    },
     "dev": {
       "executor": "nx:run-commands",
       "options": {

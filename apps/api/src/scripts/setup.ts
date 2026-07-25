@@ -1,14 +1,15 @@
 /**
- * Local stack setup: initialises the Wrangler platform proxy (D1 + R2), then
- * runs Payload migrations so the local SQLite database is ready to use.
+ * Registers the D1 + R2 bindings, then runs Payload migrations so the database
+ * is ready to use.
  *
- * Run with: `pnpm db:setup`  (cd apps/api && tsx src/scripts/setup.ts)
+ * Run with: `pnpm db:setup` for the local Wrangler database, or
+ * `pnpm db:setup:remote` to migrate the deployed D1 database.
  */
-import { runScript, withLocalPayload } from './local-payload'
+import { runScript, withPayloadClient } from './payload-script'
 
 runScript('Setup', async () => {
-  console.log('→ Initialising local Cloudflare bindings via Wrangler proxy…')
-  await withLocalPayload(async (payload) => {
+  console.log('→ Initialising Cloudflare bindings…')
+  await withPayloadClient(async (payload) => {
     console.log('  ✓ D1 and R2 bindings ready')
     console.log('→ Running Payload migrations…')
     // migrate() rather than migrateFresh(): the latter calls dropDatabase, which

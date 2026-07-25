@@ -1,0 +1,173 @@
+# Render Blueprint — everything except the API, which runs on Cloudflare Workers
+# (see DEPLOY.md). Create it once from the dashboard with "New > Blueprint" and
+# point it at this repo; Render then prompts for every value marked `sync: false`.
+#
+# Application data is NOT hosted here: Payload keeps its tables in Cloudflare D1
+# and its media in R2, both reached through native Worker bindings. The Postgres
+# and Key Value instances below belong to Evolution API alone.
+#
+# The agent is a PUBLIC web service, not a private one: the API that calls it
+# runs on Cloudflare and therefore cannot reach Render's private network. Every
+# agent endpoint is HMAC-authenticated with INTERNAL_SERVICE_SECRET.
+
+services:
+  # Public web app (Next.js BFF + UI).
+  - type: web
+    name: imno-frontend
+    runtime: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./apps/frontend/Dockerfile
+    dockerContext: .
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: NODE_ENV
+        value: production
+      - key: APP_URL
+        fromService:
+          name: imno-frontend
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: AGENT_INTERNAL_URL
+        fromService:
+          name: imno-agent
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: EVOLUTION_BASE_URL
+        fromService:
+          name: imno-evolution
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: EVOLUTION_PUBLIC_URL
+        fromService:
+          name: imno-evolution
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      # https://<worker-host>/api/webhooks/evolution — set after the Worker exists.
+      - key: EVOLUTION_WEBHOOK_URL
+        sync: false
+      - fromGroup: imno-shared
+
+  # Mastra agent runtime. Reached from the Worker over the public internet, so
+  # the HMAC secret below is the only thing standing between it and the world.
+  - type: web
+    name: imno-agent
+    runtime: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./apps/agent/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+      - key: AGENT_INTERNAL_URL
+        fromService:
+          name: imno-agent
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      # Agent threads and messages. Drop the disk below to make them ephemeral.
+      - key: MASTRA_STORAGE_URL
+        value: file:/data/agent-memory.db
+      - fromGroup: imno-shared
+    disk:
+      name: agent-memory
+      mountPath: /data
+      sizeGB: 1
+
+  # WhatsApp provider, same pinned image as docker-compose.yml.
+  - type: web
+    name: imno-evolution
+    runtime: image
+    plan: starter
+    region: oregon
+    healthCheckPath: /
+    image:
+      url: docker.io/evoapicloud/evolution-api:v2.3.7
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: SERVER_PORT
+        value: 8080
+      - key: SERVER_URL
+        fromService:
+          name: imno-evolution
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: AUTHENTICATION_TYPE
+        value: apikey
+      # Evolution's own name for the key the rest of the stack calls
+      # EVOLUTION_API_KEY. Both must hold the same value.
+      - key: AUTHENTICATION_API_KEY
+        sync: false
+      - key: DATABASE_ENABLED
+        value: 'true'
+      - key: DATABASE_PROVIDER
+        value: postgresql
+      - key: DATABASE_CONNECTION_URI
+        fromDatabase:
+          name: imno-evolution-db
+          property: connectionString
+      - key: CACHE_REDIS_ENABLED
+        value: 'true'
+      - key: CACHE_REDIS_URI
+        fromService:
+          name: imno-evolution-cache
+          type: keyvalue
+          property: connectionString
+      - key: CACHE_REDIS_PREFIX_KEY
+        value: evolution
+      - key: CACHE_LOCAL_ENABLED
+        value: 'false'
+      - key: LOG_LEVEL
+        value: ERROR
+      # Real phone numbers rather than LID identifiers.
+      - key: WPP_LID_MODE
+        value: 'false'
+
+  - type: keyvalue
+    name: imno-evolution-cache
+    plan: free
+    region: oregon
+    # No entries: reachable only from inside the private network.
+    ipAllowList: []
+    maxmemoryPolicy: noeviction
+
+databases:
+  - name: imno-evolution-db
+    databaseName: evolution
+    user: evolution
+    plan: free
+    region: oregon
+    ipAllowList: []
+
+envVarGroups:
+  # Values the frontend and the agent share with the Cloudflare Worker. The
+  # Worker gets its own copy from `.env.production` via `pnpm cf:secrets`, so
+  # every `sync: false` entry here must be given the same value there.
+  - name: imno-shared
+    envVars:
+      # Public URL of the Worker, e.g. https://imno-api.<subdomain>.workers.dev
+      - key: API_URL
+        sync: false
+      - key: INTERNAL_SERVICE_SECRET
+        sync: false
+      - key: EVOLUTION_API_KEY
+        sync: false
+      - key: EVOLUTION_WEBHOOK_SECRET
+        sync: false
+      - key: EVOLUTION_INSTANCE_PREFIX
+        value: imno-agent
+      - key: LLM_ADAPTER
+        value: default
+      - key: LLM_MODEL
+        value: deepseek-chat
+      - key: LLM_BASE_URL
+        value: https://api.deepseek.com
+      - key: LLM_API_KEY
+        sync: false
+      - key: CONTENT_DEFAULT_LANGUAGE
+        value: es

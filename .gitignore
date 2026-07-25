@@ -20,6 +20,9 @@ out/
 .wrangler/
 apps/*/.wrangler/
 
+# agent thread store (libSQL)
+.mastra/
+
 # local media + video temp
 /media/
 .tmp/
@@ -37,11 +40,13 @@ playwright-report/
 
 # local env files (never commit real secrets)
 .env
+.env.production
 .env.*.local
 .env.local
 
 # editor / os
 .DS_Store
 .idea/
+.pnpm-store/
 *.log
 npm-debug.log*

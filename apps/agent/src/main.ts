@@ -32,7 +32,9 @@ const transport = createModelTransport({
 const modelService = createAgentModelService(transport)
 const handler = createAgentHandler({ secret: cfg.internalServiceSecret, modelService })
 
-const port = Number(new URL(cfg.agentInternalUrl).port) || 3002
+// A managed host assigns the port through PORT; locally it comes from the URL
+// the API is configured to call.
+const port = Number(process.env.PORT) || Number(new URL(cfg.agentInternalUrl).port) || 3002
 startServer(port, handler)
 console.log(`agent runtime listening on :${port}`)
 console.log(
