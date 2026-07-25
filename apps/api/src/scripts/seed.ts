@@ -10,7 +10,7 @@
  */
 import type { CollectionSlug, Payload, RequiredDataFromCollectionSlug, Where } from 'payload'
 import sharp from 'sharp'
-import { runScript, withLocalPayload } from './local-payload'
+import { runScript, withPayloadClient } from './payload-script'
 
 const INSTANCE_PREFIX = process.env.EVOLUTION_INSTANCE_PREFIX || 'imno-agent'
 
@@ -300,7 +300,7 @@ const CONVERSATIONS: {
 // --- Seed run ---------------------------------------------------------------
 
 runScript('Seed', async () => {
-  await withLocalPayload(async (payload) => {
+  await withPayloadClient(async (payload) => {
     const tenantIds = new Map<string, number>()
     const clientIds = new Map<string, number>()
     const instanceIds = new Map<string, number>()

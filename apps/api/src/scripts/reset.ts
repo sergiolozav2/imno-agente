@@ -1,13 +1,13 @@
 /**
- * Wipes every row from the application collections so the local database is back
- * to a post-migration, zero-data state. Only touches the local Wrangler D1/R2
- * emulation in `apps/api/.wrangler`; the schema itself is left in place, so no
- * re-migration is needed afterwards.
+ * Wipes every row from the application collections so the database is back to a
+ * post-migration, zero-data state. The schema itself is left in place, so no
+ * re-migration is needed afterwards. Targets whichever database `CLOUDFLARE_ENV`
+ * selects, which by default is the local Wrangler emulation.
  *
  * Run with: `pnpm db:reset` (then `pnpm db:seed` to repopulate)
  */
 import type { CollectionSlug, Payload } from 'payload'
-import { runScript, withLocalPayload } from './local-payload'
+import { runScript, withPayloadClient } from './payload-script'
 
 /**
  * Child-before-parent so relationship columns never point at a deleted row.
@@ -48,8 +48,8 @@ async function wipe(payload: Payload, collection: CollectionSlug): Promise<void>
 }
 
 runScript('Reset', async () => {
-  await withLocalPayload(async (payload) => {
-    console.log('→ Deleting all documents from the local database…')
+  await withPayloadClient(async (payload) => {
+    console.log('→ Deleting all documents from the database…')
     for (const collection of DELETION_ORDER) {
       await wipe(payload, collection)
     }

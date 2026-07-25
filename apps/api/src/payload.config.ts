@@ -4,8 +4,6 @@ import { buildConfig } from 'payload'
 import { sqliteD1Adapter } from '@payloadcms/db-d1-sqlite'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { r2Storage } from '@payloadcms/storage-r2'
-import sharp from 'sharp'
-import type { SharpDependency } from 'payload'
 import { lazyD1, lazyR2 } from './cloudflare'
 import { collections } from './collections'
 
@@ -31,7 +29,8 @@ export default buildConfig({
       collections: { 'media-assets': true },
     }),
   ],
-  sharp: sharp as unknown as SharpDependency,
+  // No `sharp`: it is a native binary and cannot run on workerd. Uploads are
+  // stored in R2 at their original size and no resized variants are generated.
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },

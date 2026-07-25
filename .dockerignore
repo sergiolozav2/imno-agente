@@ -1,0 +1,41 @@
+# Both images copy the whole workspace, so everything host-specific,
+# generated, or secret is kept out of the build context.
+.git
+.github
+
+node_modules
+**/node_modules
+.pnpm-store
+
+.next
+**/.next
+.open-next
+**/.open-next
+dist
+build
+out
+*.tsbuildinfo
+
+.nx
+.mastra
+.system-whatsapp.json
+
+# Local Cloudflare (miniflare) state — production uses the real D1/R2.
+.wrangler
+**/.wrangler
+
+# Secrets are injected by the platform, never baked into an image.
+.env
+.env.*
+
+media
+.tmp
+coverage
+test-results
+playwright-report
+*.log
+
+Dockerfile
+**/Dockerfile
+.dockerignore
+docker-compose.yml

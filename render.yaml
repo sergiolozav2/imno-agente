@@ -1,0 +1,141 @@
+# Render Blueprint — everything except the API, which is deployed to Cloudflare
+# Workers (see DEPLOY.md). Create it from the Render dashboard with
+# "New > Blueprint" and point it at this repo; Render then prompts for the
+# values marked `sync: false`.
+#
+# Application data is NOT hosted here: Payload keeps its tables in Cloudflare D1
+# and its media in R2, both reached through native Worker bindings. The Postgres
+# and Key Value instances below belong to Evolution API alone.
+#
+# All services share one region so they can talk over the private network.
+
+services:
+  # Public web app.
+  - type: web
+    name: imno-frontend
+    runtime: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./apps/frontend/Dockerfile
+    dockerContext: .
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: NODE_ENV
+        value: production
+      # Payload/Next API on Cloudflare, e.g. https://imno-api.<subdomain>.workers.dev
+      - key: API_URL
+        sync: false
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
+
+  # Private agent runtime. Only the API may call it, and every call is HMAC signed.
+  - type: pserv
+    name: imno-agent
+    runtime: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./apps/agent/Dockerfile
+    dockerContext: .
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+      - key: AGENT_INTERNAL_URL
+        value: http://imno-agent:10000
+      # The API runs on Cloudflare, so this must be its public Workers URL.
+      - key: API_URL
+        sync: false
+      # Must match the same secret configured on the Worker
+      # (`wrangler secret put INTERNAL_SERVICE_SECRET`).
+      - key: INTERNAL_SERVICE_SECRET
+        sync: false
+      # Agent threads and messages. Drop the disk below to make them ephemeral.
+      - key: MASTRA_STORAGE_URL
+        value: file:/data/agent-memory.db
+      - fromGroup: imno-model
+    disk:
+      name: agent-memory
+      mountPath: /data
+      sizeGB: 1
+
+  # WhatsApp provider, same pinned image as docker-compose.yml.
+  - type: web
+    name: imno-evolution
+    runtime: image
+    plan: starter
+    region: oregon
+    healthCheckPath: /
+    image:
+      url: docker.io/evoapicloud/evolution-api:v2.3.7
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: SERVER_PORT
+        value: 8080
+      - key: SERVER_URL
+        fromService:
+          name: imno-evolution
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: AUTHENTICATION_TYPE
+        value: apikey
+      # Set the same value on the Worker as EVOLUTION_API_KEY.
+      - key: AUTHENTICATION_API_KEY
+        sync: false
+      - key: DATABASE_ENABLED
+        value: 'true'
+      - key: DATABASE_PROVIDER
+        value: postgresql
+      - key: DATABASE_CONNECTION_URI
+        fromDatabase:
+          name: imno-evolution-db
+          property: connectionString
+      - key: CACHE_REDIS_ENABLED
+        value: 'true'
+      - key: CACHE_REDIS_URI
+        fromService:
+          name: imno-evolution-cache
+          type: keyvalue
+          property: connectionString
+      - key: CACHE_REDIS_PREFIX_KEY
+        value: evolution
+      - key: CACHE_LOCAL_ENABLED
+        value: 'false'
+      - key: LOG_LEVEL
+        value: ERROR
+      # Real phone numbers rather than LID identifiers.
+      - key: WPP_LID_MODE
+        value: 'false'
+
+  - type: keyvalue
+    name: imno-evolution-cache
+    plan: free
+    region: oregon
+    # No entries: reachable only from inside the private network.
+    ipAllowList: []
+    maxmemoryPolicy: noeviction
+
+databases:
+  - name: imno-evolution-db
+    databaseName: evolution
+    user: evolution
+    plan: free
+    region: oregon
+    ipAllowList: []
+
+envVarGroups:
+  # Model settings shared by the agent runtime (the Worker gets its own copy).
+  - name: imno-model
+    envVars:
+      - key: LLM_ADAPTER
+        value: default
+      - key: LLM_MODEL
+        value: deepseek-chat
+      - key: LLM_BASE_URL
+        value: https://api.deepseek.com
+      - key: LLM_API_KEY
+        sync: false
+      - key: CONTENT_DEFAULT_LANGUAGE
+        value: es

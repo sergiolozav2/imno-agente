@@ -9,7 +9,7 @@
  *
  * Run with: `pnpm evolution:keys`
  */
-import { runScript } from './local-payload'
+import { runScript } from './payload-script'
 
 const REQUEST_TIMEOUT_MS = 10_000
 

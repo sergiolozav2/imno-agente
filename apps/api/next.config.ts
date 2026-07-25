@@ -1,4 +1,5 @@
 import { withPayload } from '@payloadcms/next/withPayload'
+import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare'
 import path from 'path'
 
 type WebpackConfig = {
@@ -22,9 +23,18 @@ type WebpackModule = {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  outputFileTracingRoot: path.join(process.cwd()),
+  // The Worker bundle is produced by `opennextjs-cloudflare build`, which reads
+  // the default Next output. Tracing still has to start at the repo root so the
+  // hoisted node_modules and the `@imno/*` sources are followed.
+  outputFileTracingRoot: path.join(process.cwd(), '..', '..'),
   outputFileTracingExcludes: {
     '**/*': ['**/next/dist/compiled/@vercel/og/**'],
+  },
+
+  // Payload's admin panel is heavy; workerd has no image optimizer and `sharp`
+  // cannot run there, so images are served as uploaded.
+  images: {
+    unoptimized: true,
   },
 
   // Packages with Cloudflare Workers (workerd) specific code.
@@ -71,5 +81,9 @@ const nextConfig = {
     return webpackConfig
   },
 }
+
+// Gives `next dev` the same D1/R2 bindings the deployed Worker gets, so
+// `getCloudflareContext()` resolves in development too.
+void initOpenNextCloudflareForDev({ configPath: 'wrangler.jsonc', environment: 'local' })
 
 export default withPayload(nextConfig, { devBundleServerPackages: false })

@@ -63,9 +63,13 @@ Run from the repo root.
 | `pnpm db:setup`          | Apply pending migrations to the local D1 database       |
 | `pnpm db:migrate:create` | Generate a migration from the current collection schema |
 | `pnpm generate:types`    | Regenerate `apps/api/src/payload-types.ts`              |
+| `pnpm db:setup:remote`   | Apply pending migrations to the deployed D1 database    |
+| `pnpm db:seed:remote`    | Seed the deployed D1 database                           |
 
 Local D1 and R2 are provided by Wrangler's platform proxy; the state lives in
-`apps/api/.wrangler` and is gitignored. Every collection except `users` is
+`apps/api/.wrangler` and is gitignored. Any `CLOUDFLARE_ENV` other than `local`
+points the `:remote` scripts at the deployed D1/R2 through wrangler's remote
+bindings — see `DEPLOY.md`. Every collection except `users` is
 tenant-scoped: access rules filter by the caller's memberships, and the tenant
 field is assigned server-side rather than trusted from the client.
 
@@ -111,6 +115,12 @@ component library and no dark mode.
 
 Evolution listens on http://localhost:8081 and reaches host services through
 `host.docker.internal` (mapped to the host gateway for Linux).
+
+## Deployment
+
+The API runs on Cloudflare Workers, where its D1 and R2 bindings are native
+(`pnpm deploy:api`). `render.yaml` deploys the frontend, the agent runtime and
+Evolution API to Render. See `DEPLOY.md`.
 
 ## Conventions
 

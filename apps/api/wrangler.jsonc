@@ -1,7 +1,24 @@
 {
+  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "imno-api",
-  "compatibility_date": "2024-12-30",
+  // The Worker bundle and static assets are produced by
+  // `pnpm --filter @imno/api build:worker` (opennextjs-cloudflare).
+  "main": ".open-next/worker.js",
+  // Not older than 2025-08-15: React 19's server renderer, which Payload's admin
+  // panel goes through, needs the global MessageChannel/MessagePort that workerd
+  // only exposes from that date on.
+  "compatibility_date": "2025-11-01",
   "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+
+  // Top level = local development (`next dev` and the CLI scripts with
+  // CLOUDFLARE_ENV=local). State lives under apps/api/.wrangler.
   "d1_databases": [
     {
       "binding": "D1",
@@ -15,6 +32,7 @@
       "bucket_name": "imno-local"
     }
   ],
+
   "env": {
     "local": {
       "d1_databases": [
@@ -28,6 +46,36 @@
         {
           "binding": "R2",
           "bucket_name": "imno-local"
+        }
+      ]
+    },
+
+    // Deployed Worker. `"remote": true` lets the CLI scripts reach this database
+    // and bucket over wrangler's proxy when CLOUDFLARE_ENV=production, which is
+    // how the deployed database is migrated and seeded from a laptop.
+    "production": {
+      "name": "imno-api",
+      // Payload's admin panel can exceed the 30s default on cold paths.
+      // Requires a paid Workers plan; drop this block on the free plan.
+      "limits": {
+        "cpu_ms": 300000
+      },
+      "d1_databases": [
+        {
+          "binding": "D1",
+          "database_name": "imno-production",
+          // Replace with the id printed by `wrangler d1 create imno-production`.
+          // Migrations are Payload's own (src/migrations), applied by
+          // `pnpm db:setup:remote` — not wrangler's SQL migration system.
+          "database_id": "REPLACE_WITH_PRODUCTION_D1_DATABASE_ID",
+          "remote": true
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "R2",
+          "bucket_name": "imno-media",
+          "remote": true
         }
       ]
     }
