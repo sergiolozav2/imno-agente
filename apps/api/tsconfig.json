@@ -22,6 +22,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
+      "@payload-config": ["./src/payload.config.ts"],
       "@imno/contracts": ["../../packages/contracts/src/index.ts"],
       "@imno/domain": ["../../packages/domain/src/index.ts"],
       "@imno/agent-core": ["../../packages/agent-core/src/index.ts"],
@@ -33,6 +34,13 @@
       "@imno/test-support": ["../../packages/test-support/src/index.ts"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "cloudflare-env.d.ts",
+    "global.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
   "exclude": ["node_modules", ".next", ".open-next", ".wrangler"]
 }

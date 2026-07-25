@@ -42,6 +42,20 @@
         "command": "next dev -p 3001",
         "cwd": "apps/api"
       }
+    },
+    "generate:types": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "payload generate:types",
+        "cwd": "apps/api"
+      }
+    },
+    "generate:importmap": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "payload generate:importmap",
+        "cwd": "apps/api"
+      }
     }
   }
 }

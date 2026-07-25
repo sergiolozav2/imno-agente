@@ -3,7 +3,11 @@
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": ["default", "!{projectRoot}/**/*.spec.ts", "!{projectRoot}/**/*.test.ts"],
-    "sharedGlobals": ["{workspaceRoot}/tsconfig.base.json"]
+    "sharedGlobals": [
+      "{workspaceRoot}/tsconfig.base.json",
+      "{workspaceRoot}/eslint.config.mjs",
+      "{workspaceRoot}/vitest.shared.ts"
+    ]
   },
   "targetDefaults": {
     "build": {

@@ -7,7 +7,10 @@
     "dev": "next dev -p 3001",
     "build": "next build",
     "start": "next start -p 3001",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "generate:types": "payload generate:types",
+    "generate:importmap": "payload generate:importmap",
+    "migrate:create": "payload migrate:create"
   },
   "dependencies": {
     "@imno/agent-core": "workspace:*",
@@ -19,9 +22,16 @@
     "@imno/integration-llm": "workspace:*",
     "@imno/runtime-config": "workspace:*",
     "@imno/test-support": "workspace:*",
-    "next": "15.5.21",
-    "react": "19.0.0",
-    "react-dom": "19.0.0"
+    "@payloadcms/db-d1-sqlite": "3.86.0",
+    "@payloadcms/next": "3.86.0",
+    "@payloadcms/richtext-lexical": "3.86.0",
+    "@payloadcms/storage-r2": "3.86.0",
+    "graphql": "16.9.0",
+    "next": "15.4.11",
+    "payload": "3.86.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "sharp": "0.35.3"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260722.1",

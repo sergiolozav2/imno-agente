@@ -1,0 +1,35 @@
+{
+  "name": "imno-api",
+  "compatibility_date": "2024-12-30",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "D1",
+      "database_name": "imno-local",
+      "database_id": "imno-local-0000-0000-0000-000000000000"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "R2",
+      "bucket_name": "imno-local"
+    }
+  ],
+  "env": {
+    "local": {
+      "d1_databases": [
+        {
+          "binding": "D1",
+          "database_name": "imno-local",
+          "database_id": "imno-local-0000-0000-0000-000000000000"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "R2",
+          "bucket_name": "imno-local"
+        }
+      ]
+    }
+  }
+}
