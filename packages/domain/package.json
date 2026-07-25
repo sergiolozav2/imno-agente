@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@imno/contracts": "workspace:*",
+    "libphonenumber-js": "1.11.17",
     "zod": "3.25.76"
   }
 }

@@ -141,12 +141,12 @@ export function Login() {
           >
             <p style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Credenciales de demostración</p>
             <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
-              Sunshine: <span className="kbd">sunshine@demo.local</span> /{' '}
-              <span className="kbd">demo123</span>
+              Sunshine: <span className="kbd">owner@demo.test</span> /{' '}
+              <span className="kbd">SeedPassw0rd!</span>
             </p>
             <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
-              Moonlight: <span className="kbd">moonlight@demo.local</span> /{' '}
-              <span className="kbd">demo123</span>
+              Moonlight: <span className="kbd">owner@costa.test</span> /{' '}
+              <span className="kbd">SeedPassw0rd!</span>
             </p>
           </div>
         </div>
