@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="es" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Inmo Agente — Promo 45s</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #04120c;
+      }
+      body {
+        font-family: Inter, Roboto, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        color: #fff;
+      }
+
+      /* ---------- shared background (not a clip) ---------- */
+      .full-bleed {
+        position: absolute;
+        inset: 0;
+      }
+      #bg {
+        background: #04120c;
+      }
+      #bg-glow-a,
+      #bg-glow-b {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(90px);
+      }
+      #bg-glow-a {
+        width: 1100px;
+        height: 1100px;
+        left: -260px;
+        top: -320px;
+        background: radial-gradient(circle, rgba(34, 197, 94, 0.34), rgba(34, 197, 94, 0) 70%);
+      }
+      #bg-glow-b {
+        width: 1000px;
+        height: 1000px;
+        right: -240px;
+        bottom: -340px;
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.26), rgba(16, 185, 129, 0) 70%);
+      }
+      #bg-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+        background-size: 96px 96px;
+      }
+      #bg-vignette {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.6) 100%);
+      }
+
+      /* ---------- chrome ---------- */
+      #watermark {
+        position: absolute;
+        left: 120px;
+        bottom: 54px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        opacity: 0;
+      }
+      #watermark .wm-mark {
+        width: 12px;
+        height: 12px;
+        border-radius: 4px;
+        background: #22c55e;
+        display: block;
+      }
+      #watermark .wm-text {
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #a7c8b7;
+      }
+      #progress-track {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 1920px;
+        height: 5px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+      #progress-bar {
+        display: block;
+        width: 1920px;
+        height: 5px;
+        background: linear-gradient(90deg, #16a34a, #4ade80);
+        transform-origin: left center;
+      }
+
+      /* ---------- clips ---------- */
+      .clip {
+        position: absolute;
+        inset: 0;
+      }
+      .scene-in {
+        position: absolute;
+        inset: 0;
+      }
+
+      /* ---------- intro / outro ---------- */
+      .center-stack {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 34px;
+      }
+      .logo-wrap {
+        position: relative;
+        width: 300px;
+        height: 300px;
+        display: grid;
+        place-items: center;
+      }
+      .ring {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 300px;
+        height: 300px;
+        margin-left: -150px;
+        margin-top: -150px;
+        border-radius: 50%;
+        border: 2px solid rgba(74, 222, 128, 0.55);
+        opacity: 0;
+      }
+      .logo-card {
+        position: relative;
+        width: 232px;
+        height: 232px;
+        border-radius: 52px;
+        background: #fff;
+        display: grid;
+        place-items: center;
+        box-shadow:
+          0 40px 90px rgba(0, 0, 0, 0.55),
+          0 0 0 1px rgba(255, 255, 255, 0.12);
+      }
+      .logo-card img {
+        display: block;
+        width: 156px;
+        height: 156px;
+        object-fit: contain;
+      }
+      .brand {
+        font-size: 112px;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1;
+        text-align: center;
+      }
+      .brand span {
+        display: inline-block;
+      }
+      .brand .accent {
+        color: #4ade80;
+      }
+      .tagline {
+        font-size: 36px;
+        font-weight: 500;
+        color: #b9d7c7;
+        text-align: center;
+        max-width: 1200px;
+      }
+      .rule {
+        display: block;
+        width: 320px;
+        height: 3px;
+        border-radius: 2px;
+        background: linear-gradient(90deg, rgba(34, 197, 94, 0), #4ade80, rgba(34, 197, 94, 0));
+        transform-origin: center;
+      }
+      .outro-chip {
+        display: inline-block;
+        padding: 14px 30px;
+        border-radius: 999px;
+        border: 1px solid rgba(74, 222, 128, 0.45);
+        background: rgba(34, 197, 94, 0.12);
+        font-size: 26px;
+        font-weight: 600;
+        color: #d6f5e4;
+      }
+
+      /* ---------- feature scenes ---------- */
+      .feature {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        grid-template-columns: 620px 1000px;
+        gap: 60px;
+        align-items: center;
+        padding: 0 120px;
+      }
+      .col-text {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .kicker {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #7fe0a5;
+      }
+      .kicker .dot {
+        display: block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #4ade80;
+      }
+      .prob {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-left: 20px;
+        border-left: 3px solid rgba(245, 158, 11, 0.75);
+      }
+      .prob-label {
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #fbbf24;
+      }
+      .prob-text {
+        font-size: 27px;
+        font-weight: 500;
+        color: #cfe3d8;
+        line-height: 1.35;
+      }
+      .sol {
+        font-size: 50px;
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+      }
+      .sol-sub {
+        font-size: 23px;
+        font-weight: 400;
+        line-height: 1.45;
+        color: #a8c9b8;
+      }
+      .shot {
+        position: relative;
+        width: 1000px;
+        height: 620px;
+        padding: 14px;
+        border-radius: 24px;
+        background: #ffffff;
+        box-shadow:
+          0 44px 100px rgba(0, 0, 0, 0.6),
+          0 0 0 1px rgba(255, 255, 255, 0.14);
+        overflow: hidden;
+      }
+      .shot img.main {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 12px;
+      }
+      .shot img.inset {
+        position: absolute;
+        right: 34px;
+        bottom: 34px;
+        display: block;
+        width: 320px;
+        height: auto;
+        border-radius: 14px;
+        box-shadow: 0 22px 50px rgba(0, 0, 0, 0.55);
+      }
+
+      /* ---------- demo scene ---------- */
+      .demo {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 26px;
+        padding: 0 120px;
+        width: 1060px;
+      }
+      .demo .sol {
+        font-size: 56px;
+      }
+      .demo-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-top: 6px;
+      }
+      .demo-list .row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-size: 24px;
+        color: #cfe3d8;
+      }
+      .demo-list .tick {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: rgba(34, 197, 94, 0.18);
+        border: 1px solid rgba(74, 222, 128, 0.5);
+        color: #4ade80;
+        font-size: 16px;
+        font-weight: 700;
+      }
+      #video-frame {
+        position: absolute;
+        right: 150px;
+        top: 70px;
+        width: 564px;
+        height: 940px;
+        border-radius: 34px;
+        background: #000;
+        box-shadow:
+          0 50px 110px rgba(0, 0, 0, 0.7),
+          0 0 0 1px rgba(255, 255, 255, 0.16);
+        opacity: 0;
+      }
+      #demo-video {
+        position: absolute;
+        inset: 8px;
+        width: 548px;
+        height: 924px;
+        object-fit: cover;
+        border-radius: 27px;
+      }
+      #video-badge {
+        position: absolute;
+        left: -150px;
+        top: 36px;
+        padding: 10px 22px;
+        border-radius: 999px;
+        background: #16a34a;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #fff;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="45"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- shared background: never a clip -->
+      <div id="bg" class="full-bleed">
+        <div id="bg-glow-a"></div>
+        <div id="bg-glow-b"></div>
+        <div id="bg-grid"></div>
+        <div id="bg-vignette"></div>
+      </div>
+
+      <!-- ============ 1. INTRO 0 → 7 ============ -->
+      <section id="intro" class="clip" data-start="0" data-duration="7" data-track-index="1">
+        <div class="scene-in" id="intro-in">
+          <div class="center-stack">
+            <div class="logo-wrap">
+              <div class="ring" id="ring-a"></div>
+              <div class="ring" id="ring-b"></div>
+              <div class="logo-card" id="logo-card">
+                <img src="assets/logo.png" alt="Inmo Agente" />
+              </div>
+            </div>
+            <h1 class="brand">
+              <span id="brand-a">Inmo</span>&nbsp;<span id="brand-b" class="accent">Agente</span>
+            </h1>
+            <span class="rule" id="intro-rule"></span>
+            <p class="tagline" id="intro-tagline">
+              El mejor amigo de los agentes inmobiliarios
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 2. PRECIOS 7 → 12.4 ============ -->
+      <section id="f1" class="clip" data-start="7" data-duration="5.4" data-track-index="1">
+        <div class="scene-in feature" id="f1-in">
+          <div class="col-text">
+            <div class="kicker"><span class="dot"></span>01 · Mapa de precios</div>
+            <div class="prob">
+              <span class="prob-label">El problema</span>
+              <p class="prob-text">Tasar a ojo: nadie sabe cuánto vale de verdad cada zona.</p>
+            </div>
+            <h2 class="sol">Mapa de calor de precios, en vivo</h2>
+            <p class="sol-sub">
+              Mediana de $/m², precio y superficie por zona, sobre el mapa real de la ciudad.
+            </p>
+          </div>
+          <div class="shot">
+            <img class="main" src="assets/full-image-heatmap-cost-buildings.png" alt="Mapa de precios" />
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 3. CLIENTES 12.4 → 17.8 ============ -->
+      <section id="f2" class="clip" data-start="12.4" data-duration="5.4" data-track-index="1">
+        <div class="scene-in feature" id="f2-in">
+          <div class="col-text">
+            <div class="kicker"><span class="dot"></span>02 · Clientes</div>
+            <div class="prob">
+              <span class="prob-label">El problema</span>
+              <p class="prob-text">Leads perdidos entre cuadernos, notas y chats sueltos.</p>
+            </div>
+            <h2 class="sol">Un CRM visual que sí usas</h2>
+            <p class="sol-sub">
+              Arrastra cada contacto entre frío, templado y caliente. Todo el equipo ve lo mismo.
+            </p>
+          </div>
+          <div class="shot">
+            <img class="main" src="assets/kanban-clients-management.png" alt="Tablero de clientes" />
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 4. WHATSAPP 17.8 → 23.2 ============ -->
+      <section id="f3" class="clip" data-start="17.8" data-duration="5.4" data-track-index="1">
+        <div class="scene-in feature" id="f3-in">
+          <div class="col-text">
+            <div class="kicker"><span class="dot"></span>03 · WhatsApp</div>
+            <div class="prob">
+              <span class="prob-label">El problema</span>
+              <p class="prob-text">Los clientes escriben a cualquier hora y nadie responde.</p>
+            </div>
+            <h2 class="sol">Tu WhatsApp Business, conectado</h2>
+            <p class="sol-sub">
+              Cada mensaje entrante se vuelve un lead y la IA contesta al instante, 24/7.
+            </p>
+          </div>
+          <div class="shot">
+            <img class="main" src="assets/whatsapp-integration.png" alt="Integración de WhatsApp" />
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 5. CONTENIDO 23.2 → 28.6 ============ -->
+      <section id="f4" class="clip" data-start="23.2" data-duration="5.4" data-track-index="1">
+        <div class="scene-in feature" id="f4-in">
+          <div class="col-text">
+            <div class="kicker"><span class="dot"></span>04 · Contenido</div>
+            <div class="prob">
+              <span class="prob-label">El problema</span>
+              <p class="prob-text">Horas escribiendo anuncios y editando videos para redes.</p>
+            </div>
+            <h2 class="sol">Textos y video en un clic</h2>
+            <p class="sol-sub">
+              Título, descripción y hashtags listos, más un video 9:16 de la propiedad con música.
+            </p>
+          </div>
+          <div class="shot">
+            <img class="main" src="assets/content-generation-for-properties.png" alt="Generación de contenido" />
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 6. ASISTENTE 28.6 → 34 ============ -->
+      <section id="f5" class="clip" data-start="28.6" data-duration="5.4" data-track-index="1">
+        <div class="scene-in feature" id="f5-in">
+          <div class="col-text">
+            <div class="kicker"><span class="dot"></span>05 · Asistente</div>
+            <div class="prob">
+              <span class="prob-label">El problema</span>
+              <p class="prob-text">Buscar datos en mil pestañas antes de poder responder.</p>
+            </div>
+            <h2 class="sol">Pídeselo al asistente</h2>
+            <p class="sol-sub">
+              «Envíale la propiedad céntrica a Juan por WhatsApp». Él la busca, la redacta y la manda.
+            </p>
+          </div>
+          <div class="shot">
+            <img class="main" src="assets/agentic-chat-sending-whatsapp-message.png" alt="Asistente de IA" />
+            <img class="inset" src="assets/agentic-chat-result-received-whatsapp.png" alt="Mensaje recibido" />
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 7. DEMO 34 → 42.2 ============ -->
+      <section id="demo" class="clip" data-start="34" data-duration="8.2" data-track-index="1">
+        <div class="scene-in" id="demo-in">
+          <div class="demo">
+            <div class="kicker"><span class="dot"></span>En vivo</div>
+            <h2 class="sol">Tu cliente recibe toda la información al instante</h2>
+            <div class="demo-list">
+              <div class="row"><span class="tick">✓</span>Entiende qué busca y en qué zona</div>
+              <div class="row"><span class="tick">✓</span>Le manda opciones reales con precio y m²</div>
+              <div class="row"><span class="tick">✓</span>Y te lo pasa listo para coordinar la visita</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- video lives in an untimed wrapper; timing is on the media element -->
+      <div id="video-frame">
+        <video
+          id="demo-video"
+          class="clip"
+          src="assets/demo-agent-sales-whatsapp.mp4"
+          data-start="34"
+          data-duration="8.2"
+          data-media-start="26.5"
+          data-track-index="2"
+          muted
+          playsinline
+        ></video>
+        <div id="video-badge">WhatsApp del cliente</div>
+      </div>
+
+      <!-- ============ 8. OUTRO 42.2 → 45 ============ -->
+      <section id="outro" class="clip" data-start="42.2" data-duration="2.8" data-track-index="1">
+        <div class="scene-in" id="outro-in">
+          <div class="center-stack">
+            <div class="logo-card" id="outro-logo">
+              <img src="assets/logo.png" alt="Inmo Agente" />
+            </div>
+            <h1 class="brand" id="outro-brand">
+              <span>Inmo</span>&nbsp;<span class="accent">Agente</span>
+            </h1>
+            <p class="tagline" id="outro-tagline">El mejor amigo de los agentes inmobiliarios</p>
+            <span class="outro-chip" id="outro-chip">Menos tareas. Más cierres.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- chrome -->
+      <div id="watermark">
+        <span class="wm-mark"></span><span class="wm-text">Inmo Agente</span>
+      </div>
+      <div id="progress-track"><span id="progress-bar"></span></div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      /* ---------- global chrome ---------- */
+      tl.fromTo("#progress-bar", { scaleX: 0 }, { scaleX: 1, duration: 45, ease: "none" }, 0);
+      tl.to("#watermark", { opacity: 1, duration: 0.6, ease: "power2.out" }, 6.9);
+      tl.to("#watermark", { opacity: 0, duration: 0.5, ease: "power2.in" }, 41.9);
+
+      /* slow background drift for the whole piece */
+      tl.fromTo(
+        "#bg-glow-a",
+        { x: -60, y: -40, scale: 1 },
+        { x: 80, y: 60, scale: 1.16, duration: 45, ease: "sine.inOut" },
+        0,
+      );
+      tl.fromTo(
+        "#bg-glow-b",
+        { x: 60, y: 40, scale: 1.1 },
+        { x: -70, y: -50, scale: 1, duration: 45, ease: "sine.inOut" },
+        0,
+      );
+      tl.fromTo("#bg-grid", { y: 0 }, { y: -96, duration: 45, ease: "none" }, 0);
+
+      /* ---------- 1. intro ---------- */
+      tl.fromTo(
+        "#ring-a",
+        { scale: 0.45, opacity: 0.75 },
+        { scale: 1.85, opacity: 0, duration: 1.5, ease: "power2.out" },
+        0.2,
+      );
+      tl.fromTo(
+        "#ring-b",
+        { scale: 0.45, opacity: 0.6 },
+        { scale: 2.3, opacity: 0, duration: 1.9, ease: "power2.out" },
+        0.45,
+      );
+      tl.from(
+        "#logo-card",
+        { scale: 0.24, opacity: 0, rotation: -14, duration: 1.05, ease: "back.out(1.9)" },
+        0.2,
+      );
+      tl.to("#logo-card", { y: -10, duration: 2.6, ease: "sine.inOut" }, 1.4);
+      tl.to("#logo-card", { y: 0, duration: 2.4, ease: "sine.inOut" }, 4.0);
+      tl.from(
+        ["#brand-a", "#brand-b"],
+        { y: 56, opacity: 0, duration: 0.75, ease: "power3.out", stagger: 0.12 },
+        1.35,
+      );
+      tl.fromTo(
+        "#intro-rule",
+        { scaleX: 0, opacity: 0 },
+        { scaleX: 1, opacity: 1, duration: 0.7, ease: "power2.out" },
+        1.95,
+      );
+      tl.from("#intro-tagline", { y: 30, opacity: 0, duration: 0.8, ease: "power3.out" }, 2.25);
+      tl.to("#intro-in", { opacity: 0, y: -40, duration: 0.55, ease: "power2.in" }, 6.4);
+      tl.set("#intro-in", { opacity: 0 }, 7);
+
+      /* ---------- 2-6. feature scenes ---------- */
+      function feature(id, start, duration) {
+        const inn = "#" + id + "-in";
+        const scene = "#" + id + " ";
+        tl.from(inn, { opacity: 0, duration: 0.45, ease: "power2.out" }, start);
+        tl.from(
+          scene + ".col-text > *",
+          { x: -54, opacity: 0, duration: 0.62, ease: "power3.out", stagger: 0.11 },
+          start + 0.1,
+        );
+        tl.from(
+          scene + ".shot",
+          { x: 90, y: 34, scale: 0.94, opacity: 0, duration: 0.85, ease: "power3.out" },
+          start + 0.18,
+        );
+        tl.fromTo(
+          scene + ".shot img.main",
+          { scale: 1 },
+          { scale: 1.05, duration: duration, ease: "none" },
+          start,
+        );
+        tl.to(inn, { opacity: 0, x: -50, duration: 0.42, ease: "power2.in" }, start + duration - 0.42);
+        tl.set(inn, { opacity: 0 }, start + duration);
+      }
+      feature("f1", 7, 5.4);
+      feature("f2", 12.4, 5.4);
+      feature("f3", 17.8, 5.4);
+      feature("f4", 23.2, 5.4);
+      feature("f5", 28.6, 5.4);
+
+      /* the paired WhatsApp screenshot pops in late in scene 5 */
+      tl.from(
+        "#f5 .shot img.inset",
+        { y: 60, opacity: 0, scale: 0.9, duration: 0.7, ease: "back.out(1.6)" },
+        30.1,
+      );
+
+      /* ---------- 7. demo ---------- */
+      tl.from("#demo-in", { opacity: 0, duration: 0.45, ease: "power2.out" }, 34);
+      tl.from(
+        "#demo .kicker, #demo .sol, #demo .row",
+        { x: -50, opacity: 0, duration: 0.6, ease: "power3.out", stagger: 0.14 },
+        34.15,
+      );
+      tl.fromTo(
+        "#video-frame",
+        { opacity: 0, x: 120, y: 30, scale: 0.93 },
+        { opacity: 1, x: 0, y: 0, scale: 1, duration: 0.95, ease: "power3.out" },
+        34.1,
+      );
+      tl.from(
+        "#video-badge",
+        { opacity: 0, x: 40, duration: 0.55, ease: "back.out(1.7)" },
+        34.9,
+      );
+      tl.to("#demo-in", { opacity: 0, x: -50, duration: 0.45, ease: "power2.in" }, 41.75);
+      tl.to("#video-frame", { opacity: 0, scale: 0.95, duration: 0.45, ease: "power2.in" }, 41.75);
+      tl.set("#demo-in", { opacity: 0 }, 42.2);
+      tl.set("#video-frame", { opacity: 0 }, 42.2);
+
+      /* ---------- 8. outro ---------- */
+      tl.from("#outro-in", { opacity: 0, duration: 0.4, ease: "power2.out" }, 42.2);
+      tl.from(
+        "#outro-logo",
+        { scale: 0.7, opacity: 0, duration: 0.7, ease: "back.out(1.8)" },
+        42.25,
+      );
+      tl.from(
+        "#outro-brand",
+        { y: 40, opacity: 0, duration: 0.65, ease: "power3.out" },
+        42.5,
+      );
+      tl.from("#outro-tagline", { y: 26, opacity: 0, duration: 0.6, ease: "power3.out" }, 42.75);
+      tl.from("#outro-chip", { y: 22, opacity: 0, duration: 0.6, ease: "power3.out" }, 43.0);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
