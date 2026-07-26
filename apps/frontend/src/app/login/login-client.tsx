@@ -33,7 +33,7 @@ export function Login() {
       }
 
       if (data.memberships && data.memberships.length > 0) {
-        router.push(`/app/${data.memberships[0].tenantSlug}/properties`)
+        router.push(`/app/${data.memberships[0].tenantSlug}/chat`)
       } else {
         setError('No se encontraron membresías para esta cuenta')
         setLoading(false)

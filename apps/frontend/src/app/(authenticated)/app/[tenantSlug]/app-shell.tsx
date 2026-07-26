@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import {
+  IconChat,
   IconBuilding,
   IconUsers,
   IconInbox,
@@ -28,6 +29,7 @@ export function AppShell({ tenantSlug, tenantName, user, children }: AppShellPro
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const navItems = [
+    { href: `/app/${tenantSlug}/chat`, label: 'Asistente', icon: IconChat },
     { href: `/app/${tenantSlug}/properties`, label: 'Propiedades', icon: IconBuilding },
     { href: `/app/${tenantSlug}/clients`, label: 'Clientes', icon: IconUsers },
     { href: `/app/${tenantSlug}/conversations`, label: 'Conversaciones', icon: IconInbox },

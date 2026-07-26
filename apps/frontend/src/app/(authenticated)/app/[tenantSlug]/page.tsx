@@ -6,6 +6,6 @@ export default async function TenantDashboard({
   params: Promise<{ tenantSlug: string }>
 }) {
   const { tenantSlug } = await params
-  // Redirect to properties by default
-  redirect(`/app/${tenantSlug}/properties`)
+  // The assistant is the workspace's front door.
+  redirect(`/app/${tenantSlug}/chat`)
 }

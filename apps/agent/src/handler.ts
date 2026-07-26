@@ -2,7 +2,12 @@ import { type Result, type SafeError, ErrorCode, err, httpForError, ok } from '@
 import type { PropertyFact } from '@imno/domain'
 import type { AgentModelService, ComposeReplyInput } from '@imno/agent-core'
 import { verifyInternalRequest } from '@imno/runtime-config'
-import { listSystemSessions, runClientReply, runSystemChat } from './mastra/runner'
+import {
+  listSystemSessions,
+  readSystemSession,
+  runClientReply,
+  runSystemChat,
+} from './mastra/runner'
 
 /**
  * Framework-neutral request/response shapes. The thin node:http server in
@@ -33,6 +38,7 @@ const COMPOSE_PATH = '/internal/agent/compose-reply'
 const SYSTEM_CHAT_PATH = '/internal/agent/system-chat'
 const CLIENT_REPLY_PATH = '/internal/agent/client-reply'
 const SESSIONS_PATH = '/internal/agent/sessions'
+const SESSION_READ_PATH = '/internal/agent/session'
 
 /**
  * Builds the single-purpose agent handler: an unauthenticated health probe and
@@ -63,6 +69,10 @@ export function createAgentHandler(deps: AgentHandlerDeps): AgentHandler {
 
       if (req.method === 'POST' && req.path === SESSIONS_PATH) {
         return runVerified(secret, SESSIONS_PATH, req, listSessions)
+      }
+
+      if (req.method === 'POST' && req.path === SESSION_READ_PATH) {
+        return runVerified(secret, SESSION_READ_PATH, req, readSession)
       }
 
       return { status: 404, json: { error: { code: ErrorCode.ResourceNotFound } } }
@@ -208,6 +218,26 @@ async function listSessions(body: Record<string, unknown>): Promise<AgentRespons
     ...(limit !== undefined ? { limit } : {}),
   })
   return { status: 200, json: { sessions } }
+}
+
+/** Replay one stored session so the app UI can reopen it. */
+async function readSession(body: Record<string, unknown>): Promise<AgentResponse> {
+  const tenantId = requiredString(body, 'tenantId')
+  const userId = requiredString(body, 'userId')
+  const threadId = requiredString(body, 'threadId')
+  if (!tenantId || !userId || !threadId) return invalid
+
+  const limit = typeof body.limit === 'number' ? body.limit : undefined
+  const session = await readSystemSession({
+    tenantId,
+    userId,
+    threadId,
+    ...(limit !== undefined ? { limit } : {}),
+  })
+  if (!session) {
+    return { status: 404, json: { error: { code: ErrorCode.ResourceNotFound } } }
+  }
+  return { status: 200, json: session }
 }
 
 function safeErrorBody(error: SafeError): { code: ErrorCode; message?: string } {

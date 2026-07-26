@@ -12,6 +12,8 @@ import { signInternalRequest } from '@imno/runtime-config'
 
 const CLIENT_REPLY_PATH = '/internal/agent/client-reply'
 const SYSTEM_CHAT_PATH = '/internal/agent/system-chat'
+const SESSIONS_PATH = '/internal/agent/sessions'
+const SESSION_READ_PATH = '/internal/agent/session'
 const REQUEST_TIMEOUT_MS = 60_000
 
 export interface ClientReplyRequest {
@@ -51,11 +53,24 @@ export interface SystemChatResponse {
   toolCalls?: string[]
 }
 
+export interface SystemSessionSummary {
+  threadId: string
+  title: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SystemSessionTranscript {
+  threadId: string
+  title: string
+  messages: { role: string; text: string; createdAt: string }[]
+}
+
 export async function requestClientReply(
   config: AgentClientConfig,
   input: ClientReplyRequest,
 ): Promise<Result<ClientReplyResponse, SafeError>> {
-  return postToAgent<ClientReplyResponse>(config, CLIENT_REPLY_PATH, input)
+  return postReplyToAgent<ClientReplyResponse>(config, CLIENT_REPLY_PATH, input)
 }
 
 /** One operator turn with the system agent, for the app UI or the platform line. */
@@ -63,10 +78,40 @@ export async function requestSystemChat(
   config: AgentClientConfig,
   input: SystemChatRequest,
 ): Promise<Result<SystemChatResponse, SafeError>> {
-  return postToAgent<SystemChatResponse>(config, SYSTEM_CHAT_PATH, input)
+  return postReplyToAgent<SystemChatResponse>(config, SYSTEM_CHAT_PATH, input)
 }
 
-async function postToAgent<T extends { text: string }>(
+/** The operator's stored chat sessions, newest first. */
+export async function requestSystemSessions(
+  config: AgentClientConfig,
+  input: { tenantId: string; userId: string; limit?: number },
+): Promise<Result<{ sessions: SystemSessionSummary[] }, SafeError>> {
+  return postToAgent(config, SESSIONS_PATH, input)
+}
+
+/** One stored session replayed as messages, for reopening a chat in the app. */
+export async function requestSystemSession(
+  config: AgentClientConfig,
+  input: { tenantId: string; userId: string; threadId: string; limit?: number },
+): Promise<Result<SystemSessionTranscript, SafeError>> {
+  return postToAgent(config, SESSION_READ_PATH, input)
+}
+
+/** Reply endpoints additionally require non-empty text to be worth returning. */
+async function postReplyToAgent<T extends { text: string }>(
+  config: AgentClientConfig,
+  path: string,
+  input: unknown,
+): Promise<Result<T, SafeError>> {
+  const result = await postToAgent<T>(config, path, input)
+  if (!result.ok) return result
+  if (typeof result.value.text !== 'string' || result.value.text.trim().length === 0) {
+    return err({ code: ErrorCode.ModelFailure, message: 'The agent produced an empty reply.' })
+  }
+  return result
+}
+
+async function postToAgent<T>(
   config: AgentClientConfig,
   path: string,
   input: unknown,
@@ -101,11 +146,8 @@ async function postToAgent<T extends { text: string }>(
   }
 
   const parsed = (await response.json().catch(() => null)) as T | null
-  if (!response.ok || !parsed || typeof parsed.text !== 'string') {
+  if (!response.ok || !parsed) {
     return err({ code: ErrorCode.ModelFailure, message: 'The agent runtime returned no reply.' })
-  }
-  if (parsed.text.trim().length === 0) {
-    return err({ code: ErrorCode.ModelFailure, message: 'The agent produced an empty reply.' })
   }
 
   return ok(parsed)

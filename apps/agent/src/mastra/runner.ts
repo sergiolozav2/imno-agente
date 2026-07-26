@@ -56,11 +56,98 @@ export async function runSystemChat(input: SystemChatInput): Promise<SystemChatR
     maxSteps: 12,
   })
 
+  await seedThreadTitle(threadId, input.message)
+
   return {
     text: finalText(response),
     threadId,
     toolCalls: collectToolNames(response),
   }
+}
+
+/**
+ * Give a freshly created thread a human-readable name from its opening message.
+ * Threads are created implicitly by `generate`, and an unnamed one shows up in
+ * the app's session list as "Untitled session", so name it on the first turn
+ * and leave it alone afterwards.
+ */
+async function seedThreadTitle(threadId: string, firstMessage: string): Promise<void> {
+  try {
+    const thread = await agentMemory.getThreadById({ threadId })
+    if (!thread) return
+    if (thread.title && thread.title !== threadId && thread.title !== 'New Thread') return
+
+    const title = firstMessage.replace(/\s+/g, ' ').trim().slice(0, 60)
+    if (title.length === 0) return
+    await agentMemory.updateThread({ id: threadId, title, metadata: thread.metadata ?? {} })
+  } catch {
+    // A missing title is cosmetic; never fail a turn over it.
+  }
+}
+
+export interface SystemSessionMessage {
+  role: string
+  text: string
+  createdAt: string
+}
+
+/**
+ * Read one stored session back for the app UI, so reopening a chat shows the
+ * same history the agent recalls. The resource id is derived from server-side
+ * identity and checked against the thread, so one operator cannot address
+ * another's session by guessing its id.
+ */
+export async function readSystemSession(input: {
+  tenantId: string
+  userId: string
+  threadId: string
+  limit?: number
+}): Promise<{ threadId: string; title: string; messages: SystemSessionMessage[] } | null> {
+  const resourceId = systemThreadResource(input.tenantId, input.userId)
+  const thread = await agentMemory.getThreadById({ threadId: input.threadId })
+  if (!thread || thread.resourceId !== resourceId) return null
+
+  const result = await agentMemory.recall({
+    threadId: input.threadId,
+    resourceId,
+    perPage: Math.min(Math.max(input.limit ?? 100, 1), 200),
+    page: 0,
+  })
+
+  const messages = result.messages
+    .map((message) => ({
+      role: String((message as { role?: unknown }).role ?? 'unknown'),
+      text: storedMessageText(message),
+      createdAt: toIso((message as { createdAt?: unknown }).createdAt),
+    }))
+    .filter((message) => message.text.length > 0 && message.role !== 'tool')
+
+  return { threadId: input.threadId, title: thread.title ?? 'Untitled session', messages }
+}
+
+/** Reduce a stored message's structured content down to its prose. */
+function storedMessageText(message: unknown): string {
+  const content = (message as { content?: unknown }).content
+  if (typeof content === 'string') return content
+  if (content && typeof content === 'object') {
+    const parts = (content as { parts?: unknown }).parts
+    if (Array.isArray(parts)) {
+      return parts
+        .map((part) => {
+          if (part && typeof part === 'object' && (part as { type?: unknown }).type === 'text') {
+            const text = (part as { text?: unknown }).text
+            return typeof text === 'string' ? text : ''
+          }
+          return ''
+        })
+        .filter((text) => text.length > 0)
+        .join(' ')
+        .trim()
+    }
+    const text = (content as { text?: unknown }).text
+    if (typeof text === 'string') return text
+  }
+  return ''
 }
 
 export interface SystemSessionSummary {
