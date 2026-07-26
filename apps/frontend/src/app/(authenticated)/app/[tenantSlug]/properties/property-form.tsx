@@ -118,7 +118,11 @@ export function PropertyForm({ tenantSlug, tenantId, property }: PropertyFormPro
       })
 
       if (!response.ok) {
-        throw new Error('No se pudo subir la imagen')
+        const detail = await response.json().catch(() => null)
+        const reason = detail?.errors?.[0]?.message || detail?.message
+        throw new Error(
+          reason ? `No se pudo subir la imagen: ${reason}` : 'No se pudo subir la imagen',
+        )
       }
 
       const newAsset = await response.json()
@@ -130,8 +134,8 @@ export function PropertyForm({ tenantSlug, tenantId, property }: PropertyFormPro
         images: [...prev.images, uploadedId],
         mainImage: prev.images.length === 0 ? uploadedId : prev.mainImage,
       }))
-    } catch {
-      setError('No se pudo subir la imagen')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo subir la imagen')
     } finally {
       setUploading(false)
     }

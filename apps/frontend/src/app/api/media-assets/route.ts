@@ -30,14 +30,33 @@ export async function GET(request: NextRequest) {
 
 /**
  * BFF route: Upload a media asset.
+ *
+ * Payload's REST upload endpoint only reads document fields from a `_payload`
+ * JSON part; plain multipart fields are ignored, so `tenant` and `kind` would
+ * come back as validation errors. Rebuild the body accordingly.
  */
 export async function POST(request: NextRequest) {
-  const formData = await request.formData()
-  const apiUrl = getApiUrl()
+  const incoming = await request.formData()
+  const file = incoming.get('file')
 
+  if (!(file instanceof File)) {
+    return NextResponse.json({ message: 'file is required' }, { status: 400 })
+  }
+
+  const doc: Record<string, unknown> = {}
+  for (const [key, value] of incoming.entries()) {
+    if (key === 'file' || value instanceof File) continue
+    doc[key] = /^\d+$/.test(value) ? Number(value) : value
+  }
+
+  const outgoing = new FormData()
+  outgoing.append('file', file, file.name)
+  outgoing.append('_payload', JSON.stringify(doc))
+
+  const apiUrl = getApiUrl()
   const response = await authFetch(`${apiUrl}/api/media-assets`, {
     method: 'POST',
-    body: formData,
+    body: outgoing,
   })
 
   const data = await response.json()
