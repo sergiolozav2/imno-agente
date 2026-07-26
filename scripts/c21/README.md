@@ -19,4 +19,24 @@ pnpm tsx scripts/c21/fetch-search.ts --tipo=casa --operacion=venta --delay-ms=50
 pnpm tsx scripts/c21/fetch-search.ts --tipo=departamento --operacion=venta --save --full
 ```
 
-Outputs → `scripts/c21/out/`
+Outputs → `scripts/c21/out/` (gitignored)
+
+## Feeding the price map
+
+The `Mapa de precios` page reads a single static file. Rebuild it after every
+scrape — it merges every dump in `out/`, drops outliers, and precomputes the
+quantile breaks and zone aggregates used by the legend and the ranking panel:
+
+```bash
+pnpm map:data
+# or a single dump:
+pnpm tsx scripts/c21/build-map-data.ts --in=scripts/c21/out/departamento-venta-….json
+```
+
+Output → `apps/frontend/public/data/santa-cruz-market.json` (committed, ~180 KB
+raw / ~50 KB gzipped). Only listings inside the Santa Cruz city bounding box
+declared at the top of `build-map-data.ts` are kept.
+
+Note: the frontend pins `maplibre-gl` to v5 — v6 loads its GeoJSON worker from a
+relative URL that Next's bundler does not resolve, which silently leaves every
+layer empty.

@@ -3,6 +3,7 @@ import { mastraConfig } from '../config'
 import { agentMemory } from '../storage'
 import { setLeadStatusTool } from '../tools/client-tools'
 import { publicPropertyTools } from '../tools/property-tools'
+import { createPropertyVideoTool, getPropertyVideoTool } from '../tools/video-tools'
 import { renderPersonaBlock, resolveClientPersona } from './client-persona'
 
 /**
@@ -36,6 +37,12 @@ const BASE_INSTRUCTIONS = [
   '- Cold: general browsing, greetings, or unrelated questions. Do not call the tool for these.',
   '- Interest only moves up. Never try to lower a status, and never announce the status change to the buyer — just keep the conversation going naturally.',
   '',
+  'PROPERTY VIDEOS',
+  '- When the buyer asks to see a property, asks for a video or a tour, or asks for more photos, call create-property-video for that listing.',
+  '- The video is rendered in the background and sent to this chat on its own when it is ready. Tell the buyer it is on its way in a couple of minutes, then carry on answering.',
+  '- Do not send a link and do not call get-property-video unless the buyer asks again later: the delivery is automatic.',
+  '- Asking for a video is a Warm signal, so set the lead status in the same turn.',
+  '',
   'BOUNDARIES',
   "- Never quote a discount, reserve a property, or commit to a visit time on the agency's behalf. Offer to have a human confirm.",
   '- Do not give legal, tax, or mortgage advice. Point to the agency team instead.',
@@ -48,8 +55,9 @@ export const clientAgent = new Agent({
   description:
     "Buyer-facing WhatsApp assistant for one agency: answers questions about that agency's listings and escalates lead temperature on buying intent.",
   instructions: async ({ requestContext }) => {
-    const tenantSlug = requestContext?.get('tenantSlug')
-    const persona = resolveClientPersona(typeof tenantSlug === 'string' ? tenantSlug : undefined)
+    // The agency's saved persona travels with the turn: this service holds no
+    // database, and the API already read the tenant to route the message.
+    const persona = resolveClientPersona(requestContext?.get('clientPersona'))
 
     const requestedLanguage = requestContext?.get('language')
     const language =
@@ -66,5 +74,7 @@ export const clientAgent = new Agent({
   tools: {
     ...publicPropertyTools,
     setLeadStatusTool,
+    createPropertyVideoTool,
+    getPropertyVideoTool,
   },
 })

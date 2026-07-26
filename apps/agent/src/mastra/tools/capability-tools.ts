@@ -74,9 +74,9 @@ export const systemCapabilities: Capability[] = [
   {
     name: 'Video generation',
     description:
-      'Property video reels. Not implemented yet — only text content is available today.',
-    examples: [],
-    status: 'preview',
+      'Build a 61-second vertical reel from a property\u2019s photos, with an AI-written Spanish subtitle description and the agency name and phone on screen. Takes a couple of minutes and is saved on the property.',
+    examples: ['Haz un vídeo de REF-104', '¿Ya está listo el vídeo del ático?'],
+    status: 'available',
   },
 ]
 

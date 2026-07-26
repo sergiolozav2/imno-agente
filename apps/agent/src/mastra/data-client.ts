@@ -15,10 +15,19 @@ const REQUEST_TIMEOUT_MS = 20_000
 
 export type DataResult<T> = { ok: true; data: T } | { ok: false; error: string }
 
+export interface DataCallOptions {
+  /**
+   * Override for operations that move more than a JSON row — a base64 video
+   * upload is megabytes, and the default is sized for queries.
+   */
+  timeoutMs?: number
+}
+
 export async function callDataOperation<T = unknown>(
   tenantId: string,
   operation: string,
   params: Record<string, unknown> = {},
+  options: DataCallOptions = {},
 ): Promise<DataResult<T>> {
   if (!mastraConfig.internalSecret) {
     return { ok: false, error: 'The agent runtime is missing INTERNAL_SERVICE_SECRET.' }
@@ -32,7 +41,7 @@ export async function callDataOperation<T = unknown>(
   })
 
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+  const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? REQUEST_TIMEOUT_MS)
   try {
     const response = await fetch(`${mastraConfig.apiBaseUrl}${BRIDGE_PATH}`, {
       method: 'POST',

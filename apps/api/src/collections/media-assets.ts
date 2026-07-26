@@ -12,7 +12,14 @@ export const MediaAssets: CollectionConfig = {
     mimeTypes: ['image/*', 'model/gltf-binary', 'model/gltf+json', 'audio/*', 'video/mp4'],
   },
   access: {
-    read: tenantScopedAccess(),
+    /**
+     * Public. Two consumers outside any browser session need the bytes: the
+     * agent container reads property photos to render videos, and WhatsApp
+     * fetches the finished video from this URL. Both are anonymous to Payload,
+     * so a tenant predicate here would 403 them. Filenames are the only thing
+     * guarding an asset — acceptable while the listings are public anyway.
+     */
+    read: () => true,
     update: tenantScopedAccess(),
     delete: tenantScopedAccess(),
     create: authenticatedCreate,

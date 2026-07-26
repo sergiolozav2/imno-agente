@@ -2,6 +2,7 @@ import { Mastra } from '@mastra/core'
 import { clientAgent } from './agents/client-agent'
 import { socialCopyAgent } from './agents/social-copy-agent'
 import { systemAgent } from './agents/system-agent'
+import { videoScriptAgent } from './agents/video-script-agent'
 import { agentStore } from './storage'
 import { socialContentWorkflow } from './workflows/social-content-workflow'
 
@@ -14,9 +15,15 @@ import { socialContentWorkflow } from './workflows/social-content-workflow'
  * throwaway scripts.
  */
 export const mastra = new Mastra({
-  agents: { systemAgent, clientAgent, socialCopyAgent },
+  agents: { systemAgent, clientAgent, socialCopyAgent, videoScriptAgent },
   workflows: { socialContentWorkflow },
   storage: agentStore,
 })
 
-export { systemAgent, clientAgent, socialCopyAgent, socialContentWorkflow }
+export {
+  systemAgent,
+  clientAgent,
+  socialCopyAgent,
+  videoScriptAgent,
+  socialContentWorkflow,
+}

@@ -1,5 +1,6 @@
 import { type Result, type SafeError, ErrorCode, err, ok } from '@imno/contracts'
 import { signInternalRequest } from '@imno/runtime-config'
+import type { ClientPersonaOverride } from './tenant-persona'
 
 /**
  * Client for the Mastra agent runtime.
@@ -23,6 +24,8 @@ export interface ClientReplyRequest {
   clientId: string
   message: string
   language?: string
+  /** The agency's saved assistant persona; the agent applies it over its default. */
+  persona?: ClientPersonaOverride
 }
 
 export interface ClientReplyResponse {

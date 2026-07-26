@@ -50,6 +50,15 @@ export const Properties: CollectionConfig = {
     { name: 'images', type: 'relationship', relationTo: 'media-assets', hasMany: true },
     { name: 'mainImage', type: 'relationship', relationTo: 'media-assets' },
     { name: 'model3d', type: 'relationship', relationTo: 'media-assets' },
+    {
+      name: 'video',
+      type: 'relationship',
+      relationTo: 'media-assets',
+      admin: {
+        readOnly: true,
+        description: 'Promo reel rendered by the agent. Regenerating replaces this.',
+      },
+    },
     { name: 'bedrooms', type: 'number' },
     { name: 'bathrooms', type: 'number' },
     { name: 'areaSqm', type: 'number' },

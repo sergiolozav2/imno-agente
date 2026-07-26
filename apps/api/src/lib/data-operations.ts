@@ -61,9 +61,10 @@ async function findOwned(
   context: OperationContext,
   collection: 'properties' | 'buyer-clients' | 'conversations',
   id: string,
+  depth = 0,
 ): Promise<Result<Record<string, unknown>, SafeError>> {
   const doc = await context.payload
-    .findByID({ collection, id, depth: 0, overrideAccess: true })
+    .findByID({ collection, id, depth, overrideAccess: true })
     .catch(() => null)
   if (!doc) return err(notFound)
   if (relationshipId((doc as { tenant?: unknown }).tenant) !== context.tenantId) {
@@ -94,7 +95,35 @@ function toProperty(doc: Record<string, unknown>): Record<string, unknown> {
     bedrooms: nullableNumber(doc.bedrooms),
     bathrooms: nullableNumber(doc.bathrooms),
     areaSqm: nullableNumber(doc.areaSqm),
+    // Only populated when the caller read at depth >= 1. Search results stay
+    // lean: a prompt does not need twenty URLs to pick a listing.
+    imageUrls: mediaUrlList(doc.images),
+    mainImageUrl: mediaUrl(doc.mainImage),
+    videoUrl: mediaUrl(doc.video),
   }
+}
+
+/**
+ * Payload stores upload URLs host-relative. The agent runtime lives on another
+ * machine, so anything crossing the bridge has to be absolute or it resolves
+ * against the wrong origin.
+ */
+function absoluteMediaUrl(url: string): string {
+  if (/^https?:\/\//.test(url)) return url
+  const base = (process.env.API_URL ?? '').replace(/\/$/, '')
+  return `${base}${url.startsWith('/') ? url : `/${url}`}`
+}
+
+/** A URL only when the relation was populated; ids alone carry no URL. */
+function mediaUrl(value: unknown): string | null {
+  if (!value || typeof value !== 'object') return null
+  const url = (value as { url?: unknown }).url
+  return typeof url === 'string' && url.length > 0 ? absoluteMediaUrl(url) : null
+}
+
+function mediaUrlList(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value.map(mediaUrl).filter((url): url is string => url !== null)
 }
 
 function toClient(doc: Record<string, unknown>): Record<string, unknown> {
@@ -168,9 +197,115 @@ const propertiesGet: OperationHandler = async (context, params) => {
   const propertyId = requiredText(params, 'propertyId')
   if (!propertyId) return err(validation('propertyId is required.'))
 
-  const found = await findOwned(context, 'properties', propertyId)
+  // Depth 1 so image and video URLs come back populated — the video renderer
+  // needs the photo URLs, and every caller benefits from knowing a reel exists.
+  const found = await findOwned(context, 'properties', propertyId, 1)
   if (!found.ok) return err(found.error)
   return ok({ property: toProperty(found.value) })
+}
+
+const MAX_VIDEO_BYTES = 24 * 1024 * 1024
+
+/**
+ * Store a rendered reel and hang it off the listing.
+ *
+ * The agent has no R2 credentials and no multipart channel, so the encoded file
+ * arrives base64 in the JSON body. That caps the practical size, which is fine:
+ * the renderer targets a few megabytes precisely so WhatsApp will inline it.
+ * Regeneration replaces the pointer and leaves the old asset orphaned rather
+ * than deleting bytes a buyer may still have a link to.
+ */
+const propertiesAttachVideo: OperationHandler = async (context, params) => {
+  const propertyId = requiredText(params, 'propertyId')
+  if (!propertyId) return err(validation('propertyId is required.'))
+
+  const dataBase64 = requiredText(params, 'dataBase64')
+  if (!dataBase64) return err(validation('dataBase64 is required.'))
+
+  const found = await findOwned(context, 'properties', propertyId)
+  if (!found.ok) return err(found.error)
+
+  let data: Buffer
+  try {
+    data = Buffer.from(dataBase64, 'base64')
+  } catch {
+    return err(validation('dataBase64 was not valid base64.'))
+  }
+  if (data.byteLength === 0) return err(validation('The video payload was empty.'))
+  if (data.byteLength > MAX_VIDEO_BYTES) {
+    return err(validation('The video exceeds the 24 MB upload limit.'))
+  }
+
+  const reference = String(found.value.reference ?? propertyId).replace(/[^a-zA-Z0-9._-]/g, '-')
+  const filename = optionalText(params, 'filename') ?? `reel-${reference}-${Date.now()}.mp4`
+
+  const asset = await context.payload.create({
+    collection: 'media-assets',
+    overrideAccess: true,
+    data: { tenant: toId(context.tenantId), kind: 'video' },
+    file: {
+      data,
+      mimetype: 'video/mp4',
+      name: filename,
+      size: data.byteLength,
+    },
+  })
+
+  await context.payload.update({
+    collection: 'properties',
+    id: propertyId,
+    overrideAccess: true,
+    data: { video: asset.id },
+  })
+
+  const url = mediaUrl(asRecord(asset))
+  if (!url) {
+    return err({ code: ErrorCode.RenderFailure, message: 'The upload returned no URL.' })
+  }
+
+  return ok({ propertyId, mediaId: String(asset.id), url, sizeBytes: data.byteLength })
+}
+
+// -----------------------------------------------------------------------------
+// Tenant branding
+// -----------------------------------------------------------------------------
+
+/**
+ * The agency identity burned into video corners. Read-only and deliberately
+ * narrow — the renderer needs a name and a number to display, nothing else.
+ */
+const tenantBranding: OperationHandler = async (context) => {
+  const tenant = await context.payload
+    .findByID({ collection: 'tenants', id: context.tenantId, depth: 0, overrideAccess: true })
+    .catch(() => null)
+  if (!tenant) return err(notFound)
+
+  const doc = asRecord(tenant)
+  const instanceName = await findInstanceNameForTenant(context.payload, context.tenantId)
+  const phone = instanceName ? await connectedNumberFor(context, instanceName) : null
+
+  return ok({
+    businessName: nullableString(doc.agentBusinessName) ?? String(doc.name ?? ''),
+    assistantName: nullableString(doc.agentAssistantName),
+    phone,
+  })
+}
+
+async function connectedNumberFor(
+  context: OperationContext,
+  instanceName: string,
+): Promise<string | null> {
+  const found = await context.payload
+    .find({
+      collection: 'whatsapp-instances',
+      where: { instanceName: { equals: instanceName } },
+      limit: 1,
+      depth: 0,
+      overrideAccess: true,
+    })
+    .catch(() => null)
+  const doc = found?.docs[0]
+  return doc ? nullableString(asRecord(doc).connectedNumber) : null
 }
 
 const propertiesUpdate: OperationHandler = async (context, params) => {
@@ -491,6 +626,92 @@ const whatsappSend: OperationHandler = async (context, params) => {
 }
 
 /**
+ * Deliver a rendered reel to a buyer.
+ *
+ * Same recipient rules as `whatsapp.send`: the model names a client id, never a
+ * number. The media argument is a URL rather than bytes because Evolution
+ * fetches it itself — which is exactly why `media-assets` reads are public.
+ * The caption is persisted as the message text so the CRM transcript still
+ * reads sensibly for anyone who cannot play the video.
+ */
+const whatsappSendVideo: OperationHandler = async (context, params) => {
+  const clientId = requiredText(params, 'clientId')
+  if (!clientId) return err(validation('clientId is required.'))
+
+  const mediaUrlParam = requiredText(params, 'mediaUrl')
+  if (!mediaUrlParam) return err(validation('mediaUrl is required.'))
+
+  const caption = optionalText(params, 'caption') ?? ''
+
+  const found = await findOwned(context, 'buyer-clients', clientId)
+  if (!found.ok) return err(found.error)
+
+  const normalizedPhone = nullableString(found.value.normalizedPhone)
+  if (!normalizedPhone) {
+    return err({ code: ErrorCode.InvalidPhone, message: 'That client has no phone number.' })
+  }
+
+  const instanceName = await resolveInstance(context, optionalText(params, 'instanceName'))
+  if (!instanceName) {
+    return err({
+      code: ErrorCode.ChannelFailure,
+      message: 'No WhatsApp instance is connected for this agency.',
+    })
+  }
+
+  const conversationId = await upsertWhatsappConversation(context, clientId, normalizedPhone)
+
+  const message = await context.payload.create({
+    collection: 'messages',
+    overrideAccess: true,
+    data: {
+      tenant: toId(context.tenantId),
+      conversation: toId(conversationId),
+      direction: 'outbound',
+      author: 'ai',
+      text: caption.length > 0 ? caption : '[vídeo de la propiedad]',
+      idempotencyKey: `video:${context.tenantId}:${clientId}:${randomUUID()}`,
+      deliveryState: 'pending',
+    },
+  })
+  const messageId = String(message.id)
+
+  const config = loadEvolutionConfig()
+  if (!config.ok) {
+    await markDelivery(context, messageId, 'failed')
+    return err({ code: ErrorCode.ConfigInvalid, message: 'WhatsApp is not configured.' })
+  }
+
+  const sent = await createEvolutionClient({
+    baseUrl: config.value.baseUrl,
+    apiKey: config.value.apiKey,
+  }).sendMedia({
+    instanceName,
+    to: normalizedPhone,
+    media: mediaUrlParam,
+    mediatype: 'video',
+    mimetype: 'video/mp4',
+    fileName: optionalText(params, 'filename') ?? 'propiedad.mp4',
+    ...(caption.length > 0 ? { caption } : {}),
+  })
+
+  if (!sent.ok) {
+    await markDelivery(context, messageId, 'failed')
+    return err(sent.error)
+  }
+
+  await markDelivery(context, messageId, 'sent', sent.value.providerMessageId)
+
+  return ok({
+    delivered: true,
+    messageId,
+    conversationId,
+    instanceName,
+    to: toEvolutionRecipient(normalizedPhone),
+  })
+}
+
+/**
  * Which line the message leaves from: an explicitly requested instance, then the
  * agency's own, then the platform's system line — which is the one operators
  * reach for when a tenant has not connected WhatsApp yet.
@@ -562,6 +783,8 @@ const operations: Record<string, OperationHandler> = {
   'properties.search': propertiesSearch,
   'properties.get': propertiesGet,
   'properties.update': propertiesUpdate,
+  'properties.attachVideo': propertiesAttachVideo,
+  'tenant.branding': tenantBranding,
   'clients.search': clientsSearch,
   'clients.get': clientsGet,
   'clients.update': clientsUpdate,
@@ -570,6 +793,7 @@ const operations: Record<string, OperationHandler> = {
   'conversations.messages': conversationsMessages,
   'messages.search': messagesSearch,
   'whatsapp.send': whatsappSend,
+  'whatsapp.sendVideo': whatsappSendVideo,
 }
 
 /** Run a named operation, or NOT_FOUND when the name is not in the catalogue. */

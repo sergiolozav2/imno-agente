@@ -7,6 +7,7 @@ import { conversationTools } from '../tools/conversation-tools'
 import { messagingTools } from '../tools/messaging-tools'
 import { propertyTools } from '../tools/property-tools'
 import { sessionTools } from '../tools/session-tools'
+import { videoTools } from '../tools/video-tools'
 import { socialContentWorkflow } from '../workflows/social-content-workflow'
 
 /**
@@ -53,7 +54,9 @@ const BASE_INSTRUCTIONS = [
   '',
   'CONTENT GENERATION',
   '- For social-media copy, run the generate-social-content workflow with the property id. Present the title, description, caption, and hashtags as editable output.',
-  '- Property video is not implemented. Say so directly if asked.',
+  '- For a property video, call create-property-video with the property id. It only starts the render: say the video is being prepared and that it takes a couple of minutes. Never state or imply it is ready.',
+  '- When the user asks whether a video is done, call get-property-video. Only once it reports ready may you share the link, as a markdown link so it plays inline.',
+  '- A property with no photos cannot be turned into a video. Say that and offer to generate the written content instead.',
   '',
   'ANSWERING "WHAT CAN YOU DO?"',
   '- Call list-capabilities and answer from it. Do not improvise a feature list.',
@@ -68,7 +71,7 @@ export const systemAgent = new Agent({
   id: 'system-agent',
   name: 'System Agent',
   description:
-    'Operations assistant for agency staff: search and edit properties and clients, read conversations, send WhatsApp messages, generate social content, and recall past sessions.',
+    'Operations assistant for agency staff: search and edit properties and clients, read conversations, send WhatsApp messages, generate social content and property videos, and recall past sessions.',
   instructions: async ({ requestContext }) => {
     const language = requestContext?.get('language')
     const tenantSlug = requestContext?.get('tenantSlug')
@@ -90,6 +93,7 @@ export const systemAgent = new Agent({
     ...messagingTools,
     ...sessionTools,
     ...capabilityTools,
+    ...videoTools,
   },
   workflows: { socialContent: socialContentWorkflow },
 })

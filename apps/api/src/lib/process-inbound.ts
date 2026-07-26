@@ -5,6 +5,7 @@ import { loadEvolutionConfig } from '@imno/runtime-config'
 import { requestClientReply } from './agent-client'
 import { findInstanceNameForTenant } from './instance-tenant'
 import { toId } from './payload-ids'
+import { loadTenantPersona } from './tenant-persona'
 
 /**
  * Reply coordinator for one stored inbound message.
@@ -61,6 +62,10 @@ async function runReply(payload: Payload, input: ProcessInboundInput): Promise<P
     return { state: 'failed', reason: 'agent-not-configured' }
   }
 
+  // How this agency's assistant presents itself is stored on the tenant, and the
+  // agent runtime has no database, so it travels with the turn.
+  const persona = await loadTenantPersona(payload, input.context.tenantId)
+
   const reply = await requestClientReply(
     { baseUrl: agentBaseUrl, secret },
     {
@@ -69,6 +74,7 @@ async function runReply(payload: Payload, input: ProcessInboundInput): Promise<P
       conversationId: input.conversationId,
       clientId: input.clientId,
       message: input.buyerText,
+      persona,
     },
   )
   if (!reply.ok) {

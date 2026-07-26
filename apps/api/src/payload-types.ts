@@ -182,6 +182,38 @@ export interface Tenant {
   countryCode: string;
   publicChatKey: string;
   allowedOrigins?: string[] | null;
+  /**
+   * Name the assistant introduces itself with on WhatsApp.
+   */
+  agentAssistantName?: string | null;
+  /**
+   * Agency name as buyers should hear it. Defaults to the tenant name.
+   */
+  agentBusinessName?: string | null;
+  /**
+   * ISO code the assistant replies in (es, en, ca).
+   */
+  agentLanguage?: string | null;
+  /**
+   * Voice guidance: formality, sentence length, how much to push.
+   */
+  agentTone?: string | null;
+  /**
+   * Exact opening line for the first message of a conversation.
+   */
+  agentGreeting?: string | null;
+  /**
+   * Facts the assistant may state — hours, coverage, policy. One per line.
+   */
+  agentBusinessNotes?: string | null;
+  /**
+   * What to say when a buyer asks for a human.
+   */
+  agentHandoffLine?: string | null;
+  /**
+   * Hard cap on reply length. WhatsApp rewards brevity.
+   */
+  agentMaxReplyCharacters?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -215,6 +247,10 @@ export interface Property {
   images?: (number | MediaAsset)[] | null;
   mainImage?: (number | null) | MediaAsset;
   model3d?: (number | null) | MediaAsset;
+  /**
+   * Promo reel rendered by the agent. Regenerating replaces this.
+   */
+  video?: (number | null) | MediaAsset;
   bedrooms?: number | null;
   bathrooms?: number | null;
   areaSqm?: number | null;
@@ -495,6 +531,14 @@ export interface TenantsSelect<T extends boolean = true> {
   countryCode?: T;
   publicChatKey?: T;
   allowedOrigins?: T;
+  agentAssistantName?: T;
+  agentBusinessName?: T;
+  agentLanguage?: T;
+  agentTone?: T;
+  agentGreeting?: T;
+  agentBusinessNotes?: T;
+  agentHandoffLine?: T;
+  agentMaxReplyCharacters?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -526,6 +570,7 @@ export interface PropertiesSelect<T extends boolean = true> {
   images?: T;
   mainImage?: T;
   model3d?: T;
+  video?: T;
   bedrooms?: T;
   bathrooms?: T;
   areaSqm?: T;

@@ -41,7 +41,7 @@ export function OperatorPhoneCard({ initialPhone }: { initialPhone: string | nul
   }
 
   return (
-    <div className="card" style={{ marginTop: '1.5rem' }}>
+    <div className="card">
       <div className="card-header">
         <h3 className="card-title">Tu número para hablar con el asistente</h3>
         {saved && (
@@ -52,8 +52,9 @@ export function OperatorPhoneCard({ initialPhone }: { initialPhone: string | nul
       </div>
 
       <p className="page-subtitle" style={{ marginTop: 0, marginBottom: '1rem' }}>
-        Escribe al número de la plataforma desde este teléfono y el asistente te responderá por
-        WhatsApp con los datos de tu agencia.
+        El número de la plataforma es el mismo para todas las agencias, así que necesita saber quién
+        le escribe. Registra aquí tu móvil y, al escribirle desde él, el asistente te responderá por
+        WhatsApp con los datos de tu agencia. Sin este número no puede reconocerte y no contestará.
       </p>
 
       {error && <div className="alert alert-error">{error}</div>}

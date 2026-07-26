@@ -39,8 +39,39 @@ const SUGGESTIONS = [
   '¿Qué propiedades tengo publicadas en este momento?',
   'Muéstrame los leads calientes de esta semana',
   'Genera contenido para redes de mi propiedad más cara',
-  '¿De qué hablamos ayer?',
+  'Crea un vídeo de mi propiedad más cara',
 ]
+
+/**
+ * The agent hands back a plain markdown link to a rendered reel, because that is
+ * also what WhatsApp needs. Here we can do better: a link whose target is an MP4
+ * becomes a player, so the operator can watch the video without leaving the chat.
+ */
+function ChatLink({
+  href,
+  children,
+}: {
+  href?: string
+  children?: React.ReactNode
+}) {
+  if (href && /\.mp4(\?|$)/i.test(href)) {
+    return (
+      <video
+        src={href}
+        controls
+        preload="metadata"
+        playsInline
+        className="chat-video"
+        aria-label={typeof children === 'string' ? children : 'Vídeo de la propiedad'}
+      />
+    )
+  }
+  return (
+    <a href={href} target="_blank" rel="noreferrer">
+      {children}
+    </a>
+  )
+}
 
 export function AssistantChat({ tenantSlug, userName }: { tenantSlug: string; userName: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -240,7 +271,9 @@ export function AssistantChat({ tenantSlug, userName }: { tenantSlug: string; us
             >
               {message.role === 'assistant' ? (
                 <div className="chat-markdown">
-                  <Markdown remarkPlugins={[remarkGfm]}>{message.text}</Markdown>
+                  <Markdown remarkPlugins={[remarkGfm]} components={{ a: ChatLink }}>
+                    {message.text}
+                  </Markdown>
                 </div>
               ) : (
                 <p style={{ whiteSpace: 'pre-wrap' }}>{message.text}</p>

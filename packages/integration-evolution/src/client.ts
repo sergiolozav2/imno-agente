@@ -11,6 +11,7 @@ import { stripWhatsAppSuffix } from '@imno/domain'
  */
 
 const DEFAULT_TIMEOUT_MS = 15_000
+const MEDIA_TIMEOUT_MS = 60_000
 
 export interface EvolutionClientConfig {
   baseUrl: string
@@ -29,8 +30,25 @@ export interface SendTextResult {
   providerMessageId?: string
 }
 
+export interface SendMediaInput {
+  instanceName: string
+  /** Recipient in any WhatsApp or E.164 form; normalized before dialing. */
+  to: string
+  /**
+   * Publicly reachable URL, or a bare base64 payload. Evolution fetches URLs
+   * from its own host, so anything behind session auth will not resolve.
+   */
+  media: string
+  mediatype: 'image' | 'video' | 'document' | 'audio'
+  mimetype: string
+  fileName: string
+  /** Text shown under the media bubble. */
+  caption?: string
+}
+
 export interface EvolutionClient {
   sendText(input: SendTextInput): Promise<Result<SendTextResult, SafeError>>
+  sendMedia(input: SendMediaInput): Promise<Result<SendTextResult, SafeError>>
 }
 
 /**
@@ -49,9 +67,13 @@ export function createEvolutionClient(config: EvolutionClientConfig): EvolutionC
   const baseUrl = config.baseUrl.replace(/\/$/, '')
   const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS
 
-  async function post(path: string, body: unknown): Promise<Result<unknown, SafeError>> {
+  async function post(
+    path: string,
+    body: unknown,
+    overrideTimeoutMs?: number,
+  ): Promise<Result<unknown, SafeError>> {
     const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), timeoutMs)
+    const timer = setTimeout(() => controller.abort(), overrideTimeoutMs ?? timeoutMs)
 
     let response: Response
     try {
@@ -90,8 +112,37 @@ export function createEvolutionClient(config: EvolutionClientConfig): EvolutionC
       })
       if (!result.ok) return err(result.error)
 
-      const key = (result.value as { key?: { id?: unknown } } | null)?.key
-      return ok(typeof key?.id === 'string' ? { providerMessageId: key.id } : {})
+      return ok(providerMessageId(result.value))
+    },
+
+    async sendMedia(input) {
+      const number = toEvolutionRecipient(input.to)
+      if (!number) {
+        return err({ code: ErrorCode.InvalidPhone, message: 'Missing recipient phone number.' })
+      }
+
+      const result = await post(
+        `/message/sendMedia/${encodeURIComponent(input.instanceName)}`,
+        {
+          number,
+          mediatype: input.mediatype,
+          mimetype: input.mimetype,
+          media: input.media,
+          fileName: input.fileName,
+          ...(input.caption ? { caption: input.caption } : {}),
+        },
+        // Evolution downloads the asset before relaying it, so this call is
+        // bounded by a file transfer rather than by an API round trip.
+        MEDIA_TIMEOUT_MS,
+      )
+      if (!result.ok) return err(result.error)
+
+      return ok(providerMessageId(result.value))
     },
   }
+}
+
+function providerMessageId(response: unknown): SendTextResult {
+  const key = (response as { key?: { id?: unknown } } | null)?.key
+  return typeof key?.id === 'string' ? { providerMessageId: key.id } : {}
 }

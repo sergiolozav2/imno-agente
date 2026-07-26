@@ -31,6 +31,7 @@
     "wa:list:remote": "cd apps/api && NODE_ENV=production node \"--env-file-if-exists=$(pwd)/../../.env.production\" ../../node_modules/.bin/tsx src/scripts/system-whatsapp-list.ts",
     "wa:connect:remote": "cd apps/api && NODE_ENV=production node \"--env-file-if-exists=$(pwd)/../../.env.production\" ../../node_modules/.bin/tsx src/scripts/system-whatsapp-connect.ts",
     "wa:delete:remote": "cd apps/api && NODE_ENV=production node \"--env-file-if-exists=$(pwd)/../../.env.production\" ../../node_modules/.bin/tsx src/scripts/system-whatsapp-delete.ts",
+    "map:data": "tsx scripts/c21/build-map-data.ts",
     "generate:types": "nx generate:types api",
     "dev:api": "nx dev api",
     "dev:agent": "nx serve agent",

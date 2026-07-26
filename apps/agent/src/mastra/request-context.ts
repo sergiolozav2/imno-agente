@@ -1,5 +1,6 @@
 import { RequestContext } from '@mastra/core/request-context'
 import { z } from 'zod'
+import type { ClientPersonaOverride } from './agents/client-persona'
 
 /**
  * The per-turn execution context every tool reads from.
@@ -20,6 +21,8 @@ export interface AgentRequestContext extends Record<string, unknown> {
   conversationId?: string
   /** Operator-selected `system_` Evolution instance, when one is chosen. */
   systemInstanceName?: string
+  /** The agency's saved assistant persona (client agent only). */
+  clientPersona?: ClientPersonaOverride
   /** Memory resource id owning this turn's threads, used for session recall. */
   memoryResource?: string
   /** Thread id of the current turn, so recall can exclude it. */
@@ -33,6 +36,7 @@ export const agentRequestContextSchema = z.object({
   clientId: z.string().optional(),
   conversationId: z.string().optional(),
   systemInstanceName: z.string().optional(),
+  clientPersona: z.record(z.string(), z.unknown()).optional(),
   memoryResource: z.string().optional(),
   memoryThread: z.string().optional(),
 })

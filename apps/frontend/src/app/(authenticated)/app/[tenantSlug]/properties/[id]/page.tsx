@@ -160,6 +160,35 @@ export default async function PropertyDetailPage({
               <span>Arrastra para rotar y usa la rueda para hacer zoom en el modelo 3D.</span>
             </div>
           )}
+
+          {property.video && (
+            <div className="card">
+              <h3 className="card-title" style={{ marginBottom: '0.75rem' }}>
+                Vídeo de la propiedad
+              </h3>
+              <video
+                src={property.video.url}
+                controls
+                preload="metadata"
+                playsInline
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  maxWidth: '280px',
+                  borderRadius: 'var(--radius-md)',
+                  background: '#000',
+                }}
+              />
+              <a
+                href={property.video.url}
+                download
+                className="btn btn-secondary btn-sm"
+                style={{ marginTop: '0.75rem' }}
+              >
+                Descargar vídeo
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Right column: Details */}

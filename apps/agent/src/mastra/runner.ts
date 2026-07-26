@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { type ClientPersonaOverride, resolveClientPersona } from './agents/client-persona'
 import { mastraConfig, readSystemInstanceState } from './config'
 import { mastra } from './index'
 import { buildRequestContext } from './request-context'
@@ -190,6 +191,8 @@ export interface ClientReplyInput {
   clientId: string
   message: string
   language?: string
+  /** The agency's saved assistant persona; unset falls back to the default. */
+  persona?: ClientPersonaOverride
 }
 
 export interface ClientReplyResult {
@@ -208,7 +211,11 @@ export interface ClientReplyResult {
 export async function runClientReply(input: ClientReplyInput): Promise<ClientReplyResult> {
   const resourceId = whatsappThreadResource(input.tenantId)
   const threadId = whatsappThreadId(input.tenantId, input.conversationId)
-  const language = input.language ?? mastraConfig.defaultLanguage
+
+  // The agency's chosen reply language is part of its persona, so it outranks
+  // the service default — an explicit per-turn language still wins over both.
+  const persona = resolveClientPersona(input.persona)
+  const language = input.language ?? persona.language ?? mastraConfig.defaultLanguage
 
   const requestContext = buildRequestContext({
     tenantId: input.tenantId,
@@ -216,6 +223,7 @@ export async function runClientReply(input: ClientReplyInput): Promise<ClientRep
     language,
     clientId: input.clientId,
     conversationId: input.conversationId,
+    clientPersona: persona,
     memoryResource: resourceId,
     memoryThread: threadId,
   })

@@ -30,6 +30,8 @@ export interface Property {
   images?: MediaAsset[] | null
   mainImage?: MediaAsset | null
   model3d?: MediaAsset | null
+  /** Promo reel rendered by the agent, when one has been generated. */
+  video?: MediaAsset | null
 }
 
 export const STATUS_LABELS: Record<PropertyStatus, string> = {

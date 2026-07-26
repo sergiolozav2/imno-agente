@@ -161,6 +161,20 @@ function optionalString(body: Record<string, unknown>, key: string): string | un
   return typeof value === 'string' && value.trim().length > 0 ? value : undefined
 }
 
+/**
+ * A nested object of caller-supplied settings. Only the shape is checked here;
+ * the field-by-field validation lives with whoever gives the values meaning.
+ */
+function optionalRecord(
+  body: Record<string, unknown>,
+  key: string,
+): Record<string, unknown> | undefined {
+  const value = body[key]
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined
+}
+
 const invalid: AgentResponse = {
   status: 422,
   json: { error: { code: ErrorCode.ValidationFailed } },
@@ -201,6 +215,7 @@ async function clientReply(body: Record<string, unknown>): Promise<AgentResponse
     clientId,
     message,
     ...(optionalString(body, 'language') ? { language: body.language as string } : {}),
+    ...(optionalRecord(body, 'persona') ? { persona: optionalRecord(body, 'persona') } : {}),
   })
   return { status: 200, json: result }
 }

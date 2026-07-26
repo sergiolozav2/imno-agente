@@ -6,10 +6,12 @@ import { useEffect, useState } from 'react'
 import {
   IconChat,
   IconBuilding,
+  IconMap,
   IconUsers,
   IconInbox,
   IconSparkles,
   IconIntegrations,
+  IconSettings,
   IconMenu,
   IconX,
   IconChevronsLeft,
@@ -31,6 +33,7 @@ export function AppShell({ tenantSlug, tenantName, user, children }: AppShellPro
   const navItems = [
     { href: `/app/${tenantSlug}/chat`, label: 'Asistente', icon: IconChat },
     { href: `/app/${tenantSlug}/properties`, label: 'Propiedades', icon: IconBuilding },
+    { href: `/app/${tenantSlug}/market-map`, label: 'Mapa de precios', icon: IconMap },
     { href: `/app/${tenantSlug}/clients`, label: 'Clientes', icon: IconUsers },
     { href: `/app/${tenantSlug}/conversations`, label: 'Conversaciones', icon: IconInbox },
     { href: `/app/${tenantSlug}/content`, label: 'Contenido', icon: IconSparkles },
@@ -38,6 +41,11 @@ export function AppShell({ tenantSlug, tenantName, user, children }: AppShellPro
       href: `/app/${tenantSlug}/settings/integrations`,
       label: 'Integraciones',
       icon: IconIntegrations,
+    },
+    {
+      href: `/app/${tenantSlug}/settings/configuration`,
+      label: 'Configuración',
+      icon: IconSettings,
     },
   ]
 

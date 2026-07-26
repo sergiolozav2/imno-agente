@@ -1,8 +1,7 @@
 import { redirect } from 'next/navigation'
-import { resolveTenant, authFetch, getSession } from '@/lib/auth'
+import { resolveTenant, authFetch } from '@/lib/auth'
 import { getApiUrl } from '@/lib/config'
 import { IntegrationsClient } from './integrations-client'
-import { OperatorPhoneCard } from './operator-phone-card'
 import type { WhatsAppInstance } from './use-whatsapp-connection'
 
 async function getWhatsAppInstance(tenantId: string): Promise<WhatsAppInstance | null> {
@@ -13,15 +12,6 @@ async function getWhatsAppInstance(tenantId: string): Promise<WhatsAppInstance |
   if (!response.ok) return null
   const data = await response.json()
   return data.docs?.[0] || null
-}
-
-async function getOperatorPhone(): Promise<string | null> {
-  const session = await getSession()
-  if (!session) return null
-  const response = await authFetch(`/api/users/${session.user.id}`)
-  if (!response.ok) return null
-  const data = await response.json()
-  return typeof data?.whatsappPhone === 'string' ? data.whatsappPhone : null
 }
 
 export default async function IntegrationsPage({
@@ -36,10 +26,7 @@ export default async function IntegrationsPage({
     redirect('/login')
   }
 
-  const [whatsappInstance, operatorPhone] = await Promise.all([
-    getWhatsAppInstance(tenant.tenantId),
-    getOperatorPhone(),
-  ])
+  const whatsappInstance = await getWhatsAppInstance(tenant.tenantId)
 
   return (
     <div className="container" style={{ maxWidth: '900px' }}>
@@ -57,8 +44,6 @@ export default async function IntegrationsPage({
         tenantSlug={tenantSlug}
         whatsappInstance={whatsappInstance}
       />
-
-      <OperatorPhoneCard initialPhone={operatorPhone} />
     </div>
   )
 }

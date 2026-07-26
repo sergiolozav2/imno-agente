@@ -399,3 +399,33 @@ export function IconGrid(props: IconProps) {
     </Svg>
   )
 }
+
+export function IconMap(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z" />
+      <path d="M9 4v14M15 6v14" />
+    </Svg>
+  )
+}
+
+export function IconLayers(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 3 3 7.5l9 4.5 9-4.5L12 3Z" />
+      <path d="M3 12.5 12 17l9-4.5" />
+      <path d="M3 17 12 21.5 21 17" />
+    </Svg>
+  )
+}
+
+export function IconSliders(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h10M18 18h2" />
+      <circle cx="16" cy="6" r="2" />
+      <circle cx="10" cy="12" r="2" />
+      <circle cx="16" cy="18" r="2" />
+    </Svg>
+  )
+}
