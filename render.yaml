@@ -130,7 +130,7 @@ services:
 
   - type: keyvalue
     name: imno-evolution-cache
-    plan: free
+    plan: standard
     region: oregon
     # No entries: reachable only from inside the private network.
     ipAllowList: []
@@ -140,7 +140,7 @@ databases:
   - name: imno-evolution-db
     databaseName: evolution
     user: evolution
-    plan: free
+    plan: standard
     region: oregon
     ipAllowList: []
 
