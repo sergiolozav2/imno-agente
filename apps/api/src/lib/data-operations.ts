@@ -43,6 +43,11 @@ type LeadStatus = (typeof LEAD_STATUSES)[number]
 export interface OperationContext {
   payload: Payload
   tenantId: string
+  /**
+   * Origin of the request that opened the bridge, used to absolutise media URLs
+   * when `API_URL` is not configured in this process.
+   */
+  origin?: string
 }
 
 type OperationHandler = (
@@ -81,7 +86,10 @@ function tenantWhere(context: OperationContext, extra: Where[] = []): Where {
 // Projections
 // -----------------------------------------------------------------------------
 
-function toProperty(doc: Record<string, unknown>): Record<string, unknown> {
+function toProperty(
+  context: OperationContext,
+  doc: Record<string, unknown>,
+): Record<string, unknown> {
   return {
     id: String(doc.id),
     reference: String(doc.reference ?? ''),
@@ -97,33 +105,40 @@ function toProperty(doc: Record<string, unknown>): Record<string, unknown> {
     areaSqm: nullableNumber(doc.areaSqm),
     // Only populated when the caller read at depth >= 1. Search results stay
     // lean: a prompt does not need twenty URLs to pick a listing.
-    imageUrls: mediaUrlList(doc.images),
-    mainImageUrl: mediaUrl(doc.mainImage),
-    videoUrl: mediaUrl(doc.video),
+    imageUrls: mediaUrlList(context, doc.images),
+    mainImageUrl: mediaUrl(context, doc.mainImage),
+    videoUrl: mediaUrl(context, doc.video),
   }
 }
 
 /**
- * Payload stores upload URLs host-relative. The agent runtime lives on another
- * machine, so anything crossing the bridge has to be absolute or it resolves
- * against the wrong origin.
+ * Payload stores upload URLs host-relative. Consumers of these URLs are all off
+ * this machine — the agent container downloads property photos, WhatsApp fetches
+ * the finished reel — so a relative path reaches them as an unfetchable string.
+ *
+ * `API_URL` is the explicit answer, but the deployed Worker does not receive it
+ * (it is not among the vars pushed to Cloudflare), which left every URL crossing
+ * the bridge relative. The origin of the calling request is the same host, so it
+ * is used as the fallback and no configuration is required for this to work.
  */
-function absoluteMediaUrl(url: string): string {
+export function absoluteMediaUrl(context: Pick<OperationContext, 'origin'>, url: string): string {
   if (/^https?:\/\//.test(url)) return url
-  const base = (process.env.API_URL ?? '').replace(/\/$/, '')
+  const base = (process.env.API_URL ?? context.origin ?? '').replace(/\/$/, '')
   return `${base}${url.startsWith('/') ? url : `/${url}`}`
 }
 
 /** A URL only when the relation was populated; ids alone carry no URL. */
-function mediaUrl(value: unknown): string | null {
+function mediaUrl(context: OperationContext, value: unknown): string | null {
   if (!value || typeof value !== 'object') return null
   const url = (value as { url?: unknown }).url
-  return typeof url === 'string' && url.length > 0 ? absoluteMediaUrl(url) : null
+  return typeof url === 'string' && url.length > 0 ? absoluteMediaUrl(context, url) : null
 }
 
-function mediaUrlList(value: unknown): string[] {
+function mediaUrlList(context: OperationContext, value: unknown): string[] {
   if (!Array.isArray(value)) return []
-  return value.map(mediaUrl).filter((url): url is string => url !== null)
+  return value
+    .map((entry) => mediaUrl(context, entry))
+    .filter((url): url is string => url !== null)
 }
 
 function toClient(doc: Record<string, unknown>): Record<string, unknown> {
@@ -190,7 +205,7 @@ const propertiesSearch: OperationHandler = async (context, params) => {
     sort: '-updatedAt',
   })
 
-  return ok({ properties: result.docs.map((doc) => toProperty(asRecord(doc))) })
+  return ok({ properties: result.docs.map((doc) => toProperty(context, asRecord(doc))) })
 }
 
 const propertiesGet: OperationHandler = async (context, params) => {
@@ -201,7 +216,7 @@ const propertiesGet: OperationHandler = async (context, params) => {
   // needs the photo URLs, and every caller benefits from knowing a reel exists.
   const found = await findOwned(context, 'properties', propertyId, 1)
   if (!found.ok) return err(found.error)
-  return ok({ property: toProperty(found.value) })
+  return ok({ property: toProperty(context, found.value) })
 }
 
 const MAX_VIDEO_BYTES = 24 * 1024 * 1024
@@ -258,7 +273,7 @@ const propertiesAttachVideo: OperationHandler = async (context, params) => {
     data: { video: asset.id },
   })
 
-  const url = mediaUrl(asRecord(asset))
+  const url = mediaUrl(context, asRecord(asset))
   if (!url) {
     return err({ code: ErrorCode.RenderFailure, message: 'The upload returned no URL.' })
   }
@@ -343,7 +358,7 @@ const propertiesUpdate: OperationHandler = async (context, params) => {
   })
 
   return ok({
-    property: toProperty(asRecord(updated)),
+    property: toProperty(context, asRecord(updated)),
     updatedFields: Object.keys(data),
   })
 }

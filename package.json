@@ -35,6 +35,8 @@
     "wa:delete:remote": "cd apps/api && NODE_ENV=production node \"--env-file-if-exists=$(pwd)/../../.env.production\" ../../node_modules/.bin/tsx src/scripts/system-whatsapp-delete.ts",
     "map:data": "tsx scripts/c21/build-map-data.ts",
     "reel:smoke": "cd apps/agent && node \"--env-file=$(pwd)/../../.env\" ../../node_modules/.bin/tsx src/scripts/reel-smoke.ts",
+    "bridge:probe": "cd apps/agent && node \"--env-file=$(pwd)/../../.env\" ../../node_modules/.bin/tsx src/scripts/bridge-probe.ts",
+    "bridge:probe:remote": "cd apps/agent && node \"--env-file-if-exists=$(pwd)/../../.env.production\" ../../node_modules/.bin/tsx src/scripts/bridge-probe.ts",
     "generate:types": "nx generate:types api",
     "dev:api": "nx dev api",
     "dev:agent": "nx serve agent",

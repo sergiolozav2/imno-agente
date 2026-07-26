@@ -14,6 +14,11 @@
 export const WORKER_VARS = [
   'PAYLOAD_SECRET',
   'INTERNAL_SERVICE_SECRET',
+  // The Worker's own public origin. Media URLs handed to the agent and to
+  // WhatsApp must be absolute, and without this they came out host-relative and
+  // unfetchable. The bridge falls back to the request origin, so this only has
+  // to be right when the canonical host differs from the one being called.
+  'API_URL',
   // Public URL of the Render agent service: the Worker calls it from Cloudflare.
   'AGENT_INTERNAL_URL',
   'EVOLUTION_BASE_URL',

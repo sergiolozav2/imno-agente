@@ -59,7 +59,7 @@ export async function POST(req: Request): Promise<Response> {
 
   const payload = await getPayloadClient()
   const result = await runDataOperation(
-    { payload, tenantId },
+    { payload, tenantId, origin: new URL(req.url).origin },
     operation,
     params && typeof params === 'object' && !Array.isArray(params)
       ? (params as Record<string, unknown>)
