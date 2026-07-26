@@ -107,9 +107,7 @@ async function runReply(payload: Payload, input: ProcessInboundInput): Promise<P
       overrideAccess: true,
       data: {
         deliveryState: delivery.state,
-        ...(delivery.providerMessageId
-          ? { providerMessageId: delivery.providerMessageId }
-          : {}),
+        ...(delivery.providerMessageId ? { providerMessageId: delivery.providerMessageId } : {}),
       },
     })
     .catch(() => null)
@@ -140,9 +138,7 @@ async function deliver(
   if (!sent.ok) return { state: 'failed' }
   return {
     state: 'sent',
-    ...(sent.value.providerMessageId
-      ? { providerMessageId: sent.value.providerMessageId }
-      : {}),
+    ...(sent.value.providerMessageId ? { providerMessageId: sent.value.providerMessageId } : {}),
   }
 }
 

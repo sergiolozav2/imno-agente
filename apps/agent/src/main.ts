@@ -18,7 +18,9 @@ import { startServer } from './server'
  */
 const configResult = loadAgentConfig()
 if (!configResult.ok) {
-  console.error(`CONFIG_INVALID ${configResult.error.variable}`)
+  console.error(
+    `CONFIG_INVALID ${configResult.error.variable} (missing, empty, or still a replace-with- placeholder; on Render check the imno-shared env group)`,
+  )
   process.exit(1)
 }
 

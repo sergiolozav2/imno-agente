@@ -158,6 +158,7 @@ execute: async (inputData, context) => { ... }
    ```
 
 3. **Verify Node.js version requirements**
+
    - Check official migration docs for minimum Node version
 
 4. **Run database migrations if using storage**

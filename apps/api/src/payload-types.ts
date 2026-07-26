@@ -107,8 +107,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'system-whatsapp': SystemWhatsapp;
+  };
+  globalsSelect: {
+    'system-whatsapp': SystemWhatsappSelect<false> | SystemWhatsappSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -672,6 +676,49 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * Provisioned from the CLI (pnpm wa:connect). Editing these values by hand will not re-pair the line.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "system-whatsapp".
+ */
+export interface SystemWhatsapp {
+  id: number;
+  /**
+   * Evolution instance name. Convention: SYSTEM_<slug>.
+   */
+  instanceName?: string | null;
+  externalInstanceId?: string | null;
+  /**
+   * Instance-scoped Evolution token returned at creation time.
+   */
+  apiKey?: string | null;
+  connectionState?: ('open' | 'connecting' | 'close') | null;
+  webhookConfigured?: boolean | null;
+  /**
+   * Owner JID reported by Evolution once the QR is scanned.
+   */
+  connectedNumber?: string | null;
+  connectedAt?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "system-whatsapp_select".
+ */
+export interface SystemWhatsappSelect<T extends boolean = true> {
+  instanceName?: T;
+  externalInstanceId?: T;
+  apiKey?: T;
+  connectionState?: T;
+  webhookConfigured?: T;
+  connectedNumber?: T;
+  connectedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

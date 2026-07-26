@@ -348,15 +348,15 @@ Evolution webhook
 
 ### Payload built-ins (`apps/api`, port 3001)
 
-| Route                                                    | Purpose                                       |
-| -------------------------------------------------------- | --------------------------------------------- |
-| `/admin`                                                 | Payload admin panel                           |
-| `/api/:collection`                                       | REST CRUD, tenant-filtered by access rules    |
-| `/api/users/login`, `/api/users/logout`, `/api/users/me` | Cookie auth (`payload-token`)                 |
-| `/api/graphql`, `/api/graphql-playground`                | GraphQL                                       |
-| `/api/health`                                            | `{ status: 'ok', service: 'api', timestamp }` |
+| Route                                                    | Purpose                                                     |
+| -------------------------------------------------------- | ----------------------------------------------------------- |
+| `/admin`                                                 | Payload admin panel                                         |
+| `/api/:collection`                                       | REST CRUD, tenant-filtered by access rules                  |
+| `/api/users/login`, `/api/users/logout`, `/api/users/me` | Cookie auth (`payload-token`)                               |
+| `/api/graphql`, `/api/graphql-playground`                | GraphQL                                                     |
+| `/api/health`                                            | `{ status: 'ok', service: 'api', timestamp }`               |
 | `POST /api/webhooks/evolution`                           | Inbound WhatsApp events (target of `EVOLUTION_WEBHOOK_URL`) |
-| `POST /api/internal/data`                                | HMAC-signed data bridge for the agent runtime |
+| `POST /api/internal/data`                                | HMAC-signed data bridge for the agent runtime               |
 
 REST query style used by the frontend:
 `?where[tenant][equals]=3&where[name][like]=ana&depth=1&limit=50&sort=-createdAt`

@@ -55,11 +55,15 @@ export const LOCAL_VARS = [
   ...new Set([...WORKER_VARS, ...FRONTEND_VARS, ...AGENT_VARS]),
 ]
 
-/** Everything `.env.production` needs to deploy and migrate from a laptop. */
+/**
+ * Everything `.env.production` needs to deploy and migrate from a laptop.
+ * CLOUDFLARE_API_TOKEN is deliberately absent: `pnpm cf:login` covers local
+ * deploys with an OAuth token, and setting a token variable to a placeholder
+ * would override that OAuth token and break wrangler.
+ */
 export const PRODUCTION_VARS = [
   'CLOUDFLARE_ENV',
   'CLOUDFLARE_ACCOUNT_ID',
-  'CLOUDFLARE_API_TOKEN',
   ...new Set([...WORKER_VARS, ...FRONTEND_VARS, ...AGENT_VARS]),
 ]
 

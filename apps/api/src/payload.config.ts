@@ -6,6 +6,7 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { r2Storage } from '@payloadcms/storage-r2'
 import { lazyD1, lazyR2 } from './cloudflare'
 import { collections } from './collections'
+import { globals } from './globals'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -22,6 +23,7 @@ export default buildConfig({
   },
   editor: lexicalEditor(),
   collections,
+  globals,
   db: sqliteD1Adapter({ binding: lazyD1 as unknown as D1Database }),
   plugins: [
     r2Storage({

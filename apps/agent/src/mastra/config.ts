@@ -55,7 +55,7 @@ export function readSystemInstanceState(): SystemInstanceState | null {
 }
 
 export interface MastraRuntimeConfig {
-  /** Model router id, e.g. `deepseek/deepseek-chat`. */
+  /** Model router id, e.g. `deepseek/deepseek-v4-pro`. */
   model: string
   /** Base URL of the Payload API that hosts the internal data bridge. */
   apiBaseUrl: string
@@ -79,7 +79,7 @@ export function loadMastraConfig(): MastraRuntimeConfig {
     process.env.DEEPSEEK_API_KEY = llmApiKey
   }
 
-  const rawModel = process.env.LLM_MODEL ?? 'deepseek-chat'
+  const rawModel = process.env.LLM_MODEL ?? 'deepseek-v4-pro'
   // Accept either a bare provider model name or a full router id.
   const model =
     process.env.MASTRA_MODEL ?? (rawModel.includes('/') ? rawModel : `deepseek/${rawModel}`)

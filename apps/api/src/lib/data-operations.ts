@@ -6,6 +6,7 @@ import { createEvolutionClient, toEvolutionRecipient } from '@imno/integration-e
 import { loadEvolutionConfig } from '@imno/runtime-config'
 import { findInstanceNameForTenant } from './instance-tenant'
 import { asRecord, toId } from './payload-ids'
+import { connectedSystemInstanceName } from './system-whatsapp'
 import {
   asIsoString,
   boundedLimit,
@@ -378,9 +379,7 @@ const conversationsMessages: OperationHandler = async (context, params) => {
   })
 
   // Query newest-first for the limit, hand back chronological for reading.
-  const messages = result.docs
-    .map((doc) => toMessage(asRecord(doc)))
-    .reverse()
+  const messages = result.docs.map((doc) => toMessage(asRecord(doc))).reverse()
 
   return ok({ conversationId, messages })
 }
@@ -491,12 +490,19 @@ const whatsappSend: OperationHandler = async (context, params) => {
   })
 }
 
+/**
+ * Which line the message leaves from: an explicitly requested instance, then the
+ * agency's own, then the platform's system line — which is the one operators
+ * reach for when a tenant has not connected WhatsApp yet.
+ */
 async function resolveInstance(
   context: OperationContext,
   preferred: string | undefined,
 ): Promise<string | null> {
   if (preferred) return preferred
-  return findInstanceNameForTenant(context.payload, context.tenantId)
+  const tenantInstance = await findInstanceNameForTenant(context.payload, context.tenantId)
+  if (tenantInstance) return tenantInstance
+  return connectedSystemInstanceName(context.payload)
 }
 
 async function markDelivery(

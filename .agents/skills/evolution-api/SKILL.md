@@ -6,10 +6,10 @@ metadata:
     requires:
       bins: []
     env:
-      EVO_API_URL: "Evolution API base URL (e.g., http://localhost:8080 or https://api.yourdomain.com)"
-      EVO_GLOBAL_KEY: "Global API key for admin operations (instance management)"
-      EVO_INSTANCE: "Default instance name"
-      EVO_API_KEY: "Instance-specific API key for messaging operations"
+      EVO_API_URL: 'Evolution API base URL (e.g., http://localhost:8080 or https://api.yourdomain.com)'
+      EVO_GLOBAL_KEY: 'Global API key for admin operations (instance management)'
+      EVO_INSTANCE: 'Default instance name'
+      EVO_API_KEY: 'Instance-specific API key for messaging operations'
 ---
 
 # Evolution API v2.3
@@ -25,11 +25,11 @@ Complete WhatsApp automation via Evolution API v2.3. Send messages, manage group
 ```json5
 {
   env: {
-    EVO_API_URL: "http://localhost:8080",       // Your API URL
-    EVO_GLOBAL_KEY: "your-global-admin-key",    // Admin key (instance mgmt)
-    EVO_INSTANCE: "my-bot",                     // Instance name
-    EVO_API_KEY: "your-instance-token"          // Instance token (messaging)
-  }
+    EVO_API_URL: 'http://localhost:8080', // Your API URL
+    EVO_GLOBAL_KEY: 'your-global-admin-key', // Admin key (instance mgmt)
+    EVO_INSTANCE: 'my-bot', // Instance name
+    EVO_API_KEY: 'your-instance-token', // Instance token (messaging)
+  },
 }
 ```
 
@@ -71,10 +71,10 @@ curl -X POST "$EVO_API_URL/message/sendText/$EVO_INSTANCE" \
 
 Two authentication levels:
 
-| Type | Header | Usage |
-|------|--------|-------|
-| **Global API Key** | `apikey: $EVO_GLOBAL_KEY` | Admin: create/delete instances, fetch all |
-| **Instance API Key** | `apikey: $EVO_API_KEY` | Messaging, groups, chat, profile, labels |
+| Type                 | Header                    | Usage                                     |
+| -------------------- | ------------------------- | ----------------------------------------- |
+| **Global API Key**   | `apikey: $EVO_GLOBAL_KEY` | Admin: create/delete instances, fetch all |
+| **Instance API Key** | `apikey: $EVO_API_KEY`    | Messaging, groups, chat, profile, labels  |
 
 All instance endpoints use the path pattern: `/{resource}/{action}/{instanceName}`
 
@@ -84,23 +84,24 @@ All instance endpoints use the path pattern: `/{resource}/{action}/{instanceName
 
 ### Phone Number Formats
 
-| Context | Format | Example |
-|---------|--------|---------|
-| **Sending messages** | Country code + number | `5511999999999` |
-| **Group JID** | Group ID | `999999999999999999@g.us` |
-| **User JID** | Number + suffix | `5511999999999@s.whatsapp.net` |
+| Context              | Format                | Example                        |
+| -------------------- | --------------------- | ------------------------------ |
+| **Sending messages** | Country code + number | `5511999999999`                |
+| **Group JID**        | Group ID              | `999999999999999999@g.us`      |
+| **User JID**         | Number + suffix       | `5511999999999@s.whatsapp.net` |
 
 ### Integration Types
 
-| Value | Description |
-|-------|-------------|
-| `WHATSAPP-BAILEYS` | Unofficial (default, full features) |
-| `WHATSAPP-BUSINESS` | Official Cloud API |
-| `EVOLUTION` | Evolution channel |
+| Value               | Description                         |
+| ------------------- | ----------------------------------- |
+| `WHATSAPP-BAILEYS`  | Unofficial (default, full features) |
+| `WHATSAPP-BUSINESS` | Official Cloud API                  |
+| `EVOLUTION`         | Evolution channel                   |
 
 ### Message Delay
 
 Add `delay` (milliseconds) to avoid rate limits:
+
 ```json
 { "delay": 1200 }
 ```
@@ -112,6 +113,7 @@ Add `delay` (milliseconds) to avoid rate limits:
 ### Instance Management
 
 #### Create Instance
+
 ```bash
 POST /instance/create
 Header: apikey: $EVO_GLOBAL_KEY
@@ -141,6 +143,7 @@ Header: apikey: $EVO_GLOBAL_KEY
 ```
 
 **Inline webhook** (optional during creation):
+
 ```json
 {
   "webhook": {
@@ -156,6 +159,7 @@ Header: apikey: $EVO_GLOBAL_KEY
 ```
 
 **Inline RabbitMQ / SQS** (optional during creation):
+
 ```json
 {
   "rabbitmq": { "enabled": true, "events": ["MESSAGES_UPSERT"] },
@@ -164,6 +168,7 @@ Header: apikey: $EVO_GLOBAL_KEY
 ```
 
 **Inline Chatwoot** (optional during creation):
+
 ```json
 {
   "chatwootAccountId": "1",
@@ -181,6 +186,7 @@ Header: apikey: $EVO_GLOBAL_KEY
 ```
 
 #### Fetch Instances
+
 ```bash
 GET /instance/fetchInstances
 Header: apikey: $EVO_GLOBAL_KEY
@@ -191,6 +197,7 @@ Header: apikey: $EVO_GLOBAL_KEY
 ```
 
 #### Connect Instance (QR Code)
+
 ```bash
 GET /instance/connect/{instance}
 Header: apikey: $EVO_API_KEY
@@ -199,33 +206,39 @@ Header: apikey: $EVO_API_KEY
 ```
 
 #### Connection Status
+
 ```bash
 GET /instance/connectionState/{instance}
 Header: apikey: $EVO_API_KEY
 ```
 
 #### Restart Instance
+
 ```bash
 POST /instance/restart/{instance}
 Header: apikey: $EVO_API_KEY
 ```
 
 #### Set Presence
+
 ```bash
 POST /instance/setPresence/{instance}
 Header: apikey: $EVO_API_KEY
 
 { "presence": "available" }
 ```
+
 **Options:** `available`, `unavailable`
 
 #### Logout Instance
+
 ```bash
 DELETE /instance/logout/{instance}
 Header: apikey: $EVO_API_KEY
 ```
 
 #### Delete Instance
+
 ```bash
 DELETE /instance/delete/{instance}
 Header: apikey: $EVO_GLOBAL_KEY
@@ -236,6 +249,7 @@ Header: apikey: $EVO_GLOBAL_KEY
 ### Settings
 
 #### Set Settings
+
 ```bash
 POST /settings/set/{instance}
 Header: apikey: $EVO_API_KEY
@@ -252,6 +266,7 @@ Header: apikey: $EVO_API_KEY
 ```
 
 #### Find Settings
+
 ```bash
 GET /settings/find/{instance}
 Header: apikey: $EVO_API_KEY
@@ -262,6 +277,7 @@ Header: apikey: $EVO_API_KEY
 ### Proxy
 
 #### Set Proxy
+
 ```bash
 POST /proxy/set/{instance}
 Header: apikey: $EVO_API_KEY
@@ -277,6 +293,7 @@ Header: apikey: $EVO_API_KEY
 ```
 
 #### Find Proxy
+
 ```bash
 GET /proxy/find/{instance}
 Header: apikey: $EVO_API_KEY
@@ -287,6 +304,7 @@ Header: apikey: $EVO_API_KEY
 ### Send Messages
 
 #### Send Text
+
 ```bash
 POST /message/sendText/{instance}
 
@@ -303,6 +321,7 @@ POST /message/sendText/{instance}
 ```
 
 #### Send Media (URL)
+
 ```bash
 POST /message/sendMedia/{instance}
 
@@ -320,6 +339,7 @@ POST /message/sendMedia/{instance}
 **Media types:** `image`, `video`, `document`
 
 #### Send Media (File Upload)
+
 ```bash
 POST /message/sendMedia/{instance}
 Content-Type: multipart/form-data
@@ -328,6 +348,7 @@ Content-Type: multipart/form-data
 ```
 
 #### Send PTV (Round Video)
+
 ```bash
 POST /message/sendPtv/{instance}
 
@@ -341,6 +362,7 @@ POST /message/sendPtv/{instance}
 Also supports file upload via form-data.
 
 #### Send Narrated Audio (Voice Note)
+
 ```bash
 POST /message/sendWhatsAppAudio/{instance}
 
@@ -352,6 +374,7 @@ POST /message/sendWhatsAppAudio/{instance}
 ```
 
 #### Send Status/Stories
+
 ```bash
 POST /message/sendStatus/{instance}
 
@@ -370,6 +393,7 @@ POST /message/sendStatus/{instance}
 For image/video: use `content` as URL and `caption` for text.
 
 #### Send Sticker
+
 ```bash
 POST /message/sendSticker/{instance}
 
@@ -381,6 +405,7 @@ POST /message/sendSticker/{instance}
 ```
 
 #### Send Location
+
 ```bash
 POST /message/sendLocation/{instance}
 
@@ -395,6 +420,7 @@ POST /message/sendLocation/{instance}
 ```
 
 #### Send Contact (vCard)
+
 ```bash
 POST /message/sendContact/{instance}
 
@@ -416,6 +442,7 @@ POST /message/sendContact/{instance}
 Multiple contacts can be sent in the array.
 
 #### Send Reaction
+
 ```bash
 POST /message/sendReaction/{instance}
 
@@ -432,6 +459,7 @@ POST /message/sendReaction/{instance}
 Set `reaction: ""` to remove.
 
 #### Send Poll
+
 ```bash
 POST /message/sendPoll/{instance}
 
@@ -445,6 +473,7 @@ POST /message/sendPoll/{instance}
 ```
 
 #### Send List
+
 ```bash
 POST /message/sendList/{instance}
 
@@ -476,6 +505,7 @@ POST /message/sendList/{instance}
 ```
 
 #### Send Buttons
+
 ```bash
 POST /message/sendButtons/{instance}
 
@@ -503,6 +533,7 @@ POST /message/sendButtons/{instance}
 ### Chat Operations
 
 #### Check WhatsApp Numbers
+
 ```bash
 POST /chat/whatsappNumbers/{instance}
 
@@ -516,6 +547,7 @@ POST /chat/whatsappNumbers/{instance}
 ```
 
 #### Read Messages (Mark as Read)
+
 ```bash
 POST /chat/markMessageAsRead/{instance}
 
@@ -531,6 +563,7 @@ POST /chat/markMessageAsRead/{instance}
 ```
 
 #### Archive Chat
+
 ```bash
 POST /chat/archiveChat/{instance}
 
@@ -550,6 +583,7 @@ POST /chat/archiveChat/{instance}
 Set `archive: false` to unarchive.
 
 #### Mark Chat Unread
+
 ```bash
 POST /chat/markChatUnread/{instance}
 
@@ -566,6 +600,7 @@ POST /chat/markChatUnread/{instance}
 ```
 
 #### Delete Message
+
 ```bash
 DELETE /chat/deleteMessageForEveryone/{instance}
 
@@ -578,6 +613,7 @@ DELETE /chat/deleteMessageForEveryone/{instance}
 ```
 
 #### Update Message (Edit)
+
 ```bash
 POST /chat/updateMessage/{instance}
 
@@ -593,6 +629,7 @@ POST /chat/updateMessage/{instance}
 ```
 
 #### Send Presence (Typing Indicator)
+
 ```bash
 POST /chat/sendPresence/{instance}
 
@@ -606,6 +643,7 @@ POST /chat/sendPresence/{instance}
 **Options:** `composing`, `recording`, `paused`
 
 #### Update Block Status
+
 ```bash
 POST /message/updateBlockStatus/{instance}
 
@@ -618,6 +656,7 @@ POST /message/updateBlockStatus/{instance}
 **Options:** `block`, `unblock`
 
 #### Fetch Profile Picture
+
 ```bash
 POST /chat/fetchProfilePictureUrl/{instance}
 
@@ -625,6 +664,7 @@ POST /chat/fetchProfilePictureUrl/{instance}
 ```
 
 #### Get Base64 From Media Message
+
 ```bash
 POST /chat/getBase64FromMediaMessage/{instance}
 
@@ -639,6 +679,7 @@ POST /chat/getBase64FromMediaMessage/{instance}
 Extracts base64 from received media. Set `convertToMp4: true` for audio files to get MP4 instead of OGG.
 
 #### Find Contacts
+
 ```bash
 POST /chat/findContacts/{instance}
 
@@ -652,6 +693,7 @@ POST /chat/findContacts/{instance}
 Omit `id` to list all contacts.
 
 #### Find Messages
+
 ```bash
 POST /chat/findMessages/{instance}
 
@@ -667,6 +709,7 @@ POST /chat/findMessages/{instance}
 ```
 
 #### Find Status Message
+
 ```bash
 POST /chat/findStatusMessage/{instance}
 
@@ -681,6 +724,7 @@ POST /chat/findStatusMessage/{instance}
 ```
 
 #### Find Chats
+
 ```bash
 POST /chat/findChats/{instance}
 ```
@@ -690,6 +734,7 @@ POST /chat/findChats/{instance}
 ### Calls
 
 #### Fake Call (Offer)
+
 ```bash
 POST /call/offer/{instance}
 
@@ -707,11 +752,13 @@ Simulates a call offer to the number. `callDuration` is in seconds.
 ### Labels
 
 #### Find Labels
+
 ```bash
 GET /label/findLabels/{instance}
 ```
 
 #### Handle Labels (Add/Remove)
+
 ```bash
 POST /label/handleLabel/{instance}
 
@@ -729,6 +776,7 @@ POST /label/handleLabel/{instance}
 ### Profile Settings
 
 #### Fetch Business Profile
+
 ```bash
 POST /chat/fetchBusinessProfile/{instance}
 
@@ -736,6 +784,7 @@ POST /chat/fetchBusinessProfile/{instance}
 ```
 
 #### Fetch Profile
+
 ```bash
 POST /chat/fetchProfile/{instance}
 
@@ -743,6 +792,7 @@ POST /chat/fetchProfile/{instance}
 ```
 
 #### Update Profile Name
+
 ```bash
 POST /chat/updateProfileName/{instance}
 
@@ -750,6 +800,7 @@ POST /chat/updateProfileName/{instance}
 ```
 
 #### Update Profile Status
+
 ```bash
 POST /chat/updateProfileStatus/{instance}
 
@@ -757,6 +808,7 @@ POST /chat/updateProfileStatus/{instance}
 ```
 
 #### Update Profile Picture
+
 ```bash
 POST /chat/updateProfilePicture/{instance}
 
@@ -764,16 +816,19 @@ POST /chat/updateProfilePicture/{instance}
 ```
 
 #### Remove Profile Picture
+
 ```bash
 DELETE /chat/removeProfilePicture/{instance}
 ```
 
 #### Fetch Privacy Settings
+
 ```bash
 GET /chat/fetchPrivacySettings/{instance}
 ```
 
 #### Update Privacy Settings
+
 ```bash
 POST /chat/updatePrivacySettings/{instance}
 
@@ -788,6 +843,7 @@ POST /chat/updatePrivacySettings/{instance}
 ```
 
 **Privacy values:**
+
 - `readreceipts`: `all`, `none`
 - `profile`: `all`, `contacts`, `contact_blacklist`, `none`
 - `status`: `all`, `contacts`, `contact_blacklist`, `none`
@@ -800,6 +856,7 @@ POST /chat/updatePrivacySettings/{instance}
 ### Group Management
 
 #### Create Group
+
 ```bash
 POST /group/create/{instance}
 
@@ -814,6 +871,7 @@ POST /group/create/{instance}
 ```
 
 #### Update Group Picture
+
 ```bash
 POST /group/updateGroupPicture/{instance}?groupJid={groupJid}
 
@@ -821,6 +879,7 @@ POST /group/updateGroupPicture/{instance}?groupJid={groupJid}
 ```
 
 #### Update Group Subject (Name)
+
 ```bash
 POST /group/updateGroupSubject/{instance}?groupJid={groupJid}
 
@@ -828,6 +887,7 @@ POST /group/updateGroupSubject/{instance}?groupJid={groupJid}
 ```
 
 #### Update Group Description
+
 ```bash
 POST /group/updateGroupDescription/{instance}?groupJid={groupJid}
 
@@ -835,16 +895,19 @@ POST /group/updateGroupDescription/{instance}?groupJid={groupJid}
 ```
 
 #### Fetch Invite Code
+
 ```bash
 GET /group/inviteCode/{instance}?groupJid={groupJid}
 ```
 
 #### Revoke Invite Code
+
 ```bash
 POST /group/revokeInviteCode/{instance}?groupJid={groupJid}
 ```
 
 #### Send Invite URL
+
 ```bash
 POST /group/sendInvite/{instance}
 
@@ -856,27 +919,32 @@ POST /group/sendInvite/{instance}
 ```
 
 #### Find Group by Invite Code
+
 ```bash
 GET /group/inviteInfo/{instance}?inviteCode={inviteCode}
 ```
 
 #### Find Group by JID
+
 ```bash
 GET /group/findGroupInfos/{instance}?groupJid={groupJid}
 ```
 
 #### Fetch All Groups
+
 ```bash
 GET /group/fetchAllGroups/{instance}
 # Optional: ?getParticipants=true
 ```
 
 #### Find Participants
+
 ```bash
 GET /group/participants/{instance}?groupJid={groupJid}
 ```
 
 #### Update Participants
+
 ```bash
 POST /group/updateParticipant/{instance}?groupJid={groupJid}
 
@@ -889,32 +957,37 @@ POST /group/updateParticipant/{instance}?groupJid={groupJid}
 **Actions:** `add`, `remove`, `promote`, `demote`
 
 #### Update Group Settings
+
 ```bash
 POST /group/updateSetting/{instance}?groupJid={groupJid}
 
 { "action": "announcement" }
 ```
 
-**Actions:**  
-- `announcement` - Only admins send messages  
-- `not_announcement` - Everyone can send  
-- `locked` - Only admins edit group info  
+**Actions:**
+
+- `announcement` - Only admins send messages
+- `not_announcement` - Everyone can send
+- `locked` - Only admins edit group info
 - `unlocked` - Everyone can edit group info
 
 #### Toggle Ephemeral (Disappearing Messages)
+
 ```bash
 POST /group/toggleEphemeral/{instance}?groupJid={groupJid}
 
 { "expiration": 86400 }
 ```
 
-**Expiration values (seconds):**  
-- `0` - Off  
-- `86400` - 24 hours  
-- `604800` - 7 days  
+**Expiration values (seconds):**
+
+- `0` - Off
+- `86400` - 24 hours
+- `604800` - 7 days
 - `7776000` - 90 days
 
 #### Leave Group
+
 ```bash
 DELETE /group/leaveGroup/{instance}?groupJid={groupJid}
 ```
@@ -924,6 +997,7 @@ DELETE /group/leaveGroup/{instance}?groupJid={groupJid}
 ### Integrations - Events
 
 #### Webhook
+
 ```bash
 # Set Webhook
 POST /webhook/set/{instance}
@@ -967,10 +1041,12 @@ GET /webhook/find/{instance}
 ```
 
 **Key options:**
+
 - `byEvents` - If `true`, sends to separate URLs per event type
 - `base64` - If `true`, media comes as base64 in payload
 
 #### WebSocket
+
 ```bash
 POST /websocket/set/{instance}
 
@@ -985,6 +1061,7 @@ GET /websocket/find/{instance}
 ```
 
 #### RabbitMQ
+
 ```bash
 POST /rabbitmq/set/{instance}
 
@@ -999,6 +1076,7 @@ GET /rabbitmq/find/{instance}
 ```
 
 #### SQS (Amazon)
+
 ```bash
 POST /sqs/set/{instance}
 
@@ -1013,17 +1091,21 @@ GET /sqs/find/{instance}
 ```
 
 #### NATS
+
 ```bash
 POST /nats/set/{instance}
 GET /nats/find/{instance}
 ```
+
 Same payload structure as SQS/RabbitMQ.
 
 #### Pusher
+
 ```bash
 POST /pusher/set/{instance}
 GET /pusher/find/{instance}
 ```
+
 Same payload structure as SQS/RabbitMQ.
 
 **Available Events (all transports):**
@@ -1036,6 +1118,7 @@ Same payload structure as SQS/RabbitMQ.
 All chatbot integrations share a common pattern with settings, session management, CRUD, and trigger configuration.
 
 **Common trigger options (all chatbots):**
+
 ```json
 {
   "triggerType": "keyword",
@@ -1053,22 +1136,23 @@ All chatbot integrations share a common pattern with settings, session managemen
 }
 ```
 
-| Field | Description |
-|-------|-------------|
-| `triggerType` | `all` (every message) or `keyword` (matched) |
+| Field             | Description                                                     |
+| ----------------- | --------------------------------------------------------------- |
+| `triggerType`     | `all` (every message) or `keyword` (matched)                    |
 | `triggerOperator` | `contains`, `equals`, `startsWith`, `endsWith`, `regex`, `none` |
-| `triggerValue` | The keyword/pattern to match |
-| `expire` | Session timeout (minutes) |
-| `keywordFinish` | Keyword to end bot session |
-| `delayMessage` | Delay between messages (ms) |
-| `unknownMessage` | Response for unrecognized input |
-| `listeningFromMe` | Process messages sent by you |
-| `stopBotFromMe` | Pause bot when you send a message |
-| `keepOpen` | Keep session alive after flow ends |
-| `debounceTime` | Debounce interval (seconds) |
-| `ignoreJids` | JIDs to ignore (e.g., `["@g.us"]` to ignore groups) |
+| `triggerValue`    | The keyword/pattern to match                                    |
+| `expire`          | Session timeout (minutes)                                       |
+| `keywordFinish`   | Keyword to end bot session                                      |
+| `delayMessage`    | Delay between messages (ms)                                     |
+| `unknownMessage`  | Response for unrecognized input                                 |
+| `listeningFromMe` | Process messages sent by you                                    |
+| `stopBotFromMe`   | Pause bot when you send a message                               |
+| `keepOpen`        | Keep session alive after flow ends                              |
+| `debounceTime`    | Debounce interval (seconds)                                     |
+| `ignoreJids`      | JIDs to ignore (e.g., `["@g.us"]` to ignore groups)             |
 
 #### Chatwoot
+
 ```bash
 # Set Chatwoot
 POST /chatwoot/set/{instance}
@@ -1098,6 +1182,7 @@ GET /chatwoot/find/{instance}
 ```
 
 #### Typebot
+
 ```bash
 # Create Typebot
 POST /typebot/create/{instance}
@@ -1166,6 +1251,7 @@ GET  /typebot/fetchSettings/{instance}
 **Session statuses:** `opened`, `paused`, `closed`
 
 #### OpenAI
+
 ```bash
 # Set Credentials
 POST /openai/creds/{instance}
@@ -1214,6 +1300,7 @@ GET  /openai/fetchSettings/{instance}
 **Bot types:** `assistant`, `chatCompletion`
 
 #### Dify
+
 ```bash
 POST /dify/create/{instance}
 
@@ -1240,6 +1327,7 @@ GET  /dify/fetchSettings/{instance}
 **Dify bot types:** `chatBot`, `textGenerator`, `agent`, `workflow`
 
 #### Flowise
+
 ```bash
 POST /flowise/create/{instance}
 
@@ -1263,6 +1351,7 @@ GET  /flowise/fetchSettings/{instance}
 ```
 
 #### N8N
+
 ```bash
 POST /n8n/create/{instance}
 
@@ -1286,6 +1375,7 @@ GET  /n8n/fetchSettings/{instance}
 ```
 
 #### Evolution Bot
+
 ```bash
 POST /evolutionBot/create/{instance}
 
@@ -1309,6 +1399,7 @@ GET  /evolutionBot/fetchSettings/{instance}
 ```
 
 #### Evo AI
+
 ```bash
 POST /evoai/create/{instance}
 
@@ -1336,6 +1427,7 @@ GET  /evoai/fetchSettings/{instance}
 ### Integrations - Channel (WhatsApp Business Cloud API)
 
 #### Send Template
+
 ```bash
 POST /message/sendTemplate/{instance}
 
@@ -1364,6 +1456,7 @@ POST /message/sendTemplate/{instance}
 ```
 
 #### Create Template
+
 ```bash
 POST /template/create/{instance}
 
@@ -1394,11 +1487,13 @@ POST /template/create/{instance}
 **Categories:** `AUTHENTICATION`, `MARKETING`, `UTILITY`
 
 #### Find Templates
+
 ```bash
 GET /template/find/{instance}
 ```
 
 #### Evolution Channel Webhook
+
 ```bash
 POST /webhook/evolution
 
@@ -1424,6 +1519,7 @@ POST /webhook/evolution
 ### Storage (S3/MinIO)
 
 #### Get Media
+
 ```bash
 POST /s3/getMedia/{instance}
 
@@ -1435,6 +1531,7 @@ POST /s3/getMedia/{instance}
 ```
 
 #### Get Media URL
+
 ```bash
 POST /s3/getMediaUrl/{instance}
 
@@ -1448,6 +1545,7 @@ POST /s3/getMediaUrl/{instance}
 ### System
 
 #### Get API Information
+
 ```bash
 GET /
 ```
@@ -1455,6 +1553,7 @@ GET /
 Returns API version and system info.
 
 #### Metrics
+
 ```bash
 GET /metrics
 Authorization: Basic (METRICS_USER:password)
@@ -1465,6 +1564,7 @@ Authorization: Basic (METRICS_USER:password)
 ## Common Workflows
 
 ### Broadcast Message
+
 ```bash
 for number in 5511999999999 5511888888888 5511777777777; do
   curl -X POST "$EVO_API_URL/message/sendText/$EVO_INSTANCE" \
@@ -1479,6 +1579,7 @@ done
 ```
 
 ### Auto-Create Group + Configure Bot
+
 ```bash
 # 1. Create group
 curl -X POST "$EVO_API_URL/group/create/$EVO_INSTANCE" \
@@ -1502,6 +1603,7 @@ curl -X POST "$EVO_API_URL/typebot/create/$EVO_INSTANCE" \
 ```
 
 ### Full Instance Setup (Instance + Webhook + Chatwoot)
+
 ```bash
 # 1. Create instance with webhook inline
 curl -X POST "$EVO_API_URL/instance/create" \
@@ -1541,6 +1643,7 @@ curl -X POST "$EVO_API_URL/chatwoot/set/support-bot" \
 ```
 
 ### Check Numbers Before Sending
+
 ```bash
 # 1. Validate numbers
 curl -X POST "$EVO_API_URL/chat/whatsappNumbers/$EVO_INSTANCE" \
@@ -1556,42 +1659,46 @@ curl -X POST "$EVO_API_URL/chat/whatsappNumbers/$EVO_INSTANCE" \
 ## Rate Limits & Best Practices
 
 ### Delays
+
 Always add delays between messages:
+
 ```json
 { "delay": 1200 }
 ```
 
 **Recommended:**
+
 - 1-2 seconds between individual messages
 - 3-5 seconds between mass sends
 - Exponential backoff on errors
 
 ### Error Handling
 
-| Status | Meaning |
-|--------|---------|
-| `200` | Success |
-| `400` | Bad request (check body/params) |
-| `401` | Unauthorized (check API key) |
-| `404` | Not found (instance/resource) |
-| `500` | Server error |
+| Status | Meaning                         |
+| ------ | ------------------------------- |
+| `200`  | Success                         |
+| `400`  | Bad request (check body/params) |
+| `401`  | Unauthorized (check API key)    |
+| `404`  | Not found (instance/resource)   |
+| `500`  | Server error                    |
 
 ### Common Issues
 
-| Error | Solution |
-|-------|----------|
-| Instance not connected | Run `GET /instance/connect/{instance}` |
-| Invalid phone format | Use country code without `+`: `5511999999999` |
-| Message not sent | Check `GET /instance/connectionState/{instance}` |
-| Group operation failed | Verify you're admin |
-| Media extraction fails | Ensure MongoDB/file storage is enabled |
-| Chatwoot not syncing | Check token and URL, verify `importMessages` is true |
+| Error                  | Solution                                             |
+| ---------------------- | ---------------------------------------------------- |
+| Instance not connected | Run `GET /instance/connect/{instance}`               |
+| Invalid phone format   | Use country code without `+`: `5511999999999`        |
+| Message not sent       | Check `GET /instance/connectionState/{instance}`     |
+| Group operation failed | Verify you're admin                                  |
+| Media extraction fails | Ensure MongoDB/file storage is enabled               |
+| Chatwoot not syncing   | Check token and URL, verify `importMessages` is true |
 
 ---
 
 ## Troubleshooting
 
 ### Instance Won't Connect
+
 ```bash
 # 1. Check instances
 GET /instance/fetchInstances
@@ -1604,12 +1711,14 @@ GET /instance/connect/{instance}
 ```
 
 ### Chatbot Not Responding
+
 1. Check bot is enabled: `GET /{botType}/find/{instance}`
 2. Check trigger matches incoming message
 3. Check session status: `GET /{botType}/fetchSessions/{botId}/{instance}`
 4. Reset session: `POST /{botType}/changeStatus/{instance}` with `status: "closed"`
 
 ### Messages Not Being Delivered
+
 1. Verify connection: `GET /instance/connectionState/{instance}`
 2. Check phone format (no `+`, no spaces)
 3. Verify recipient has WhatsApp: `POST /chat/whatsappNumbers/{instance}`
@@ -1619,18 +1728,18 @@ GET /instance/connect/{instance}
 
 ## v2 vs v3 (Evolution Go) Differences
 
-| Feature | v2.3 | v3 (Go) |
-|---------|------|---------|
-| **Language** | Node.js/TypeScript | Go |
-| **Endpoints** | `/message/sendText/{instance}` | `/send/text` |
-| **Chatbot integrations** | 7 (Typebot, OpenAI, Dify, Flowise, N8N, EvolutionBot, EvoAI) | Fewer built-in |
-| **Chatwoot** | Native integration | Separate |
-| **Event transports** | 6 (Webhook, WS, RabbitMQ, SQS, NATS, Pusher) | Fewer |
-| **Lists/Buttons** | Supported | Deprecated |
-| **PTV (Round Video)** | Supported | Supported |
-| **Status/Stories** | Supported | Supported |
-| **Templates** | Business Cloud API | Business Cloud API |
-| **S3 Storage** | Built-in | Separate |
+| Feature                  | v2.3                                                         | v3 (Go)            |
+| ------------------------ | ------------------------------------------------------------ | ------------------ |
+| **Language**             | Node.js/TypeScript                                           | Go                 |
+| **Endpoints**            | `/message/sendText/{instance}`                               | `/send/text`       |
+| **Chatbot integrations** | 7 (Typebot, OpenAI, Dify, Flowise, N8N, EvolutionBot, EvoAI) | Fewer built-in     |
+| **Chatwoot**             | Native integration                                           | Separate           |
+| **Event transports**     | 6 (Webhook, WS, RabbitMQ, SQS, NATS, Pusher)                 | Fewer              |
+| **Lists/Buttons**        | Supported                                                    | Deprecated         |
+| **PTV (Round Video)**    | Supported                                                    | Supported          |
+| **Status/Stories**       | Supported                                                    | Supported          |
+| **Templates**            | Business Cloud API                                           | Business Cloud API |
+| **S3 Storage**           | Built-in                                                     | Separate           |
 
 ---
 

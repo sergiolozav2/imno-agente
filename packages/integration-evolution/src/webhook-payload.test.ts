@@ -48,7 +48,9 @@ describe('normalizeEvolutionWebhookPayload', () => {
   })
 
   it('flags a message sent by the connected account as an outbound echo', () => {
-    const raw = envelope({ key: { remoteJid: '59176820989@s.whatsapp.net', fromMe: true, id: 'X' } })
+    const raw = envelope({
+      key: { remoteJid: '59176820989@s.whatsapp.net', fromMe: true, id: 'X' },
+    })
     const result = normalizeEvolutionWebhookPayload(raw) as { fromConnectedAccount: boolean }
     expect(result.fromConnectedAccount).toBe(true)
   })

@@ -78,20 +78,18 @@ function makeDeps(opts: {
   const updateLeadStatus = vi
     .fn()
     .mockResolvedValue(opts.leadFails ? err({ code: 'MODEL_FAILURE' }) : ok(undefined))
-  const composePropertyReply = vi
-    .fn()
-    .mockResolvedValue(
-      opts.modelFails
-        ? err({ code: 'MODEL_FAILURE' })
-        : ok(
-            opts.reply ?? {
-              answer: 'Grounded answer.',
-              citedPropertyIds: ['prop-101'],
-              intent: 'low',
-              confidence: 0.9,
-            },
-          ),
-    )
+  const composePropertyReply = vi.fn().mockResolvedValue(
+    opts.modelFails
+      ? err({ code: 'MODEL_FAILURE' })
+      : ok(
+          opts.reply ?? {
+            answer: 'Grounded answer.',
+            citedPropertyIds: ['prop-101'],
+            intent: 'low',
+            confidence: 0.9,
+          },
+        ),
+  )
   const model: AgentModelService = { composePropertyReply }
   const deps: AgentFlowDeps = {
     data: {

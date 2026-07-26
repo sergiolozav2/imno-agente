@@ -28,7 +28,7 @@ afterEach(() => {
 
 const config = {
   apiKey: 'secret-key',
-  model: 'deepseek-chat',
+  model: 'deepseek-v4-pro',
   baseUrl: 'https://api.deepseek.com/v1',
 }
 
