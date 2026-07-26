@@ -28,6 +28,12 @@ export interface ReelJob {
   durationSeconds?: number
   /** Populated on `failed`; safe to show a user. */
   error?: string
+  /**
+   * Non-fatal things worth telling the operator: photos dropped for being too
+   * heavy or unreachable, the gallery truncated to the image cap, a WhatsApp
+   * delivery that did not go through.
+   */
+  notes?: string[]
   /** True when the finished reel was pushed to a buyer on WhatsApp. */
   sentToClient?: boolean
 }

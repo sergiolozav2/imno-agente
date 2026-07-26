@@ -35,6 +35,7 @@ RUN mkdir -p /data && chown node:node /data
 # Reel scratch space. Deliberately not on the /data disk: these files are
 # downloaded stills and one encode output, all deleted when the job ends.
 ENV VIDEO_TEMP_DIR=/tmp/imno-video
+RUN mkdir -p /tmp/imno-video && chown node:node /tmp/imno-video
 ENV VIDEO_FFMPEG_PATH=/usr/bin/ffmpeg
 
 USER node

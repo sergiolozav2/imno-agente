@@ -39,6 +39,15 @@ interface PropertyFormProps {
   property?: Property
 }
 
+/**
+ * Payload rejects a relationship id whose JS type does not match the adapter's
+ * id type, and D1/SQLite ids are numbers. Form state keeps ids as strings so
+ * comparisons stay simple, so they are converted back on the way out.
+ */
+function relationId(id: string): string | number {
+  return /^\d+$/.test(id) ? Number(id) : id
+}
+
 function initialState(property?: Property): PropertyFormState {
   return {
     reference: property?.reference ?? '',
@@ -115,10 +124,11 @@ export function PropertyForm({ tenantSlug, tenantId, property }: PropertyFormPro
       const newAsset = await response.json()
       setMediaAssets((prev) => [...prev, newAsset.doc])
 
+      const uploadedId = String(newAsset.doc.id)
       setFormData((prev) => ({
         ...prev,
-        images: [...prev.images, newAsset.doc.id],
-        mainImage: prev.images.length === 0 ? newAsset.doc.id : prev.mainImage,
+        images: [...prev.images, uploadedId],
+        mainImage: prev.images.length === 0 ? uploadedId : prev.mainImage,
       }))
     } catch {
       setError('No se pudo subir la imagen')
@@ -176,9 +186,9 @@ export function PropertyForm({ tenantSlug, tenantId, property }: PropertyFormPro
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : empty,
         bathrooms: formData.bathrooms ? parseInt(formData.bathrooms) : empty,
         areaSqm: formData.areaSqm ? parseFloat(formData.areaSqm) : empty,
-        images: formData.images.length > 0 ? formData.images : empty,
-        mainImage: formData.mainImage || empty,
-        model3d: formData.model3d || empty,
+        images: formData.images.length > 0 ? formData.images.map(relationId) : empty,
+        mainImage: formData.mainImage ? relationId(formData.mainImage) : empty,
+        model3d: formData.model3d ? relationId(formData.model3d) : empty,
       }
 
       const response = await fetch(isEdit ? `/api/properties/${property!.id}` : '/api/properties', {
@@ -272,6 +282,8 @@ export function PropertyForm({ tenantSlug, tenantId, property }: PropertyFormPro
                 value={formData.price}
                 onChange={(e) => setFormData((prev) => ({ ...prev, price: e.target.value }))}
                 placeholder="250000"
+                min="0"
+                step="any"
                 required
               />
             </div>
@@ -402,9 +414,9 @@ export function PropertyForm({ tenantSlug, tenantId, property }: PropertyFormPro
                   className="form-input"
                   value={formData.areaSqm}
                   onChange={(e) => setFormData((prev) => ({ ...prev, areaSqm: e.target.value }))}
-                  placeholder="120"
+                  placeholder="120.5"
                   min="0"
-                  step="0.1"
+                  step="any"
                 />
               </div>
             </div>

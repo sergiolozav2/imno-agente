@@ -1,5 +1,6 @@
 import { createTool } from '@mastra/core/tools'
 import { z } from 'zod'
+import { describeReelLimits, REEL_LIMITS } from '../video/reel-limits'
 
 /**
  * Self-description.
@@ -73,9 +74,12 @@ export const systemCapabilities: Capability[] = [
   },
   {
     name: 'Video generation',
-    description:
-      'Build a 61-second vertical reel from a property\u2019s photos, with an AI-written Spanish subtitle description and the agency name and phone on screen. Takes a couple of minutes and is saved on the property.',
-    examples: ['Haz un vídeo de REF-104', '¿Ya está listo el vídeo del ático?'],
+    description: `Build a ${REEL_LIMITS.totalSeconds}-second vertical reel from a property\u2019s photos, with an AI-written Spanish subtitle description and the agency name and phone on screen. Takes a couple of minutes and is saved on the property. ${describeReelLimits()}`,
+    examples: [
+      'Haz un vídeo de REF-104',
+      '¿Ya está listo el vídeo del ático?',
+      '¿Qué límites tiene el generador de vídeo?',
+    ],
     status: 'available',
   },
 ]

@@ -9,7 +9,8 @@ import {
   hasActiveJob,
   type ReelJob,
 } from '../video/reel-jobs'
-import { REEL_TOTAL_SECONDS, resolveScriptLanguage, runReelPipeline } from '../video/reel-pipeline'
+import { describeReelLimits, REEL_LIMITS, REEL_TOTAL_SECONDS } from '../video/reel-limits'
+import { resolveScriptLanguage, runReelPipeline } from '../video/reel-pipeline'
 
 /**
  * Property reel generation.
@@ -30,7 +31,12 @@ const jobStatusShape = z.object({
   imageCount: z.number().nullable(),
   durationSeconds: z.number().nullable(),
   sentToClient: z.boolean(),
+  /** On `failed`, the concrete reason. Repeat it to the user, do not generalise. */
   detail: z.string().nullable(),
+  /** Non-fatal warnings, e.g. photos dropped for being too heavy. */
+  notes: z.array(z.string()),
+  /** Present when something went wrong, so the reason can be put in context. */
+  limits: z.string().optional(),
 })
 
 type JobStatus = z.infer<typeof jobStatusShape>
@@ -46,6 +52,8 @@ function toStatus(job: ReelJob): JobStatus {
     durationSeconds: job.durationSeconds ?? null,
     sentToClient: job.sentToClient === true,
     detail: job.error ?? null,
+    notes: job.notes ?? [],
+    ...(job.state === 'failed' ? { limits: describeReelLimits() } : {}),
   }
 }
 
@@ -68,6 +76,8 @@ export const createPropertyVideoTool = createTool({
     'tell the user the video is being prepared and that you will have the link shortly.',
     'Never claim the video is ready based on this tool — call get-property-video to find out.',
     'In a WhatsApp conversation the finished video is sent to the buyer automatically.',
+    `Limits: ${describeReelLimits()}`,
+    'If this returns an error, tell the user exactly what it says instead of a generic failure.',
   ].join(' '),
   inputSchema: z.object({
     propertyId: z.string().describe('Id of the property to build the reel from'),
@@ -83,9 +93,11 @@ export const createPropertyVideoTool = createTool({
       reference: z.string(),
       status: z.literal('queued'),
       imageCount: z.number(),
+      imagesUsed: z.number(),
       totalSeconds: z.number(),
+      notes: z.array(z.string()),
     }),
-    z.object({ error: z.string() }),
+    z.object({ error: z.string(), limits: z.string() }),
   ]),
   execute: async ({ propertyId, language }, context) => {
     const execution = context as ToolExecutionContext
@@ -94,13 +106,16 @@ export const createPropertyVideoTool = createTool({
     // One encode at a time: the container has half a CPU, and two concurrent
     // ffmpeg runs would make both of them miss their deadline.
     if (hasActiveJob()) {
-      return { error: 'Ya hay un vídeo en proceso. Espera a que termine antes de pedir otro.' }
+      return {
+        error: 'Ya hay un vídeo en proceso. Espera a que termine antes de pedir otro.',
+        limits: describeReelLimits(),
+      }
     }
 
     const loaded = await callDataOperation<PropertyMediaProjection>(tenantId, 'properties.get', {
       propertyId,
     })
-    if (!loaded.ok) return { error: loaded.error }
+    if (!loaded.ok) return { error: loaded.error, limits: describeReelLimits() }
 
     const { reference, imageUrls, mainImageUrl } = loaded.data.property
     const imageCount = new Set(
@@ -111,8 +126,16 @@ export const createPropertyVideoTool = createTool({
       return {
         error:
           'Esa propiedad no tiene imágenes cargadas, así que no se puede generar el vídeo. Añade al menos una foto.',
+        limits: describeReelLimits(),
       }
     }
+
+    const notes =
+      imageCount > REEL_LIMITS.maxImages
+        ? [
+            `La propiedad tiene ${imageCount} fotos; el vídeo usará las primeras ${REEL_LIMITS.maxImages}.`,
+          ]
+        : []
 
     const clientId = optionalContextValue(execution, 'clientId')
     const job = createReelJob({ tenantId, propertyId, reference: reference || propertyId })
@@ -132,7 +155,9 @@ export const createPropertyVideoTool = createTool({
       reference: job.reference,
       status: 'queued' as const,
       imageCount,
+      imagesUsed: Math.min(imageCount, REEL_LIMITS.maxImages),
       totalSeconds: REEL_TOTAL_SECONDS,
+      notes,
     }
   },
 })
@@ -144,12 +169,15 @@ export const getPropertyVideoTool = createTool({
     'Call this whenever the user asks about a video you started earlier, or asks whether it is ready.',
     'Identify the run by propertyId, or by jobId if you have one.',
     'When the status is ready, give the user the URL as a markdown link so it plays in the chat.',
+    'When the status is failed, tell the user the `detail` field as the reason — never say only that it failed —',
+    'and use `limits` to explain which constraint was hit and what to change.',
+    'Always pass on anything in `notes`: those are photos or deliveries that were skipped.',
   ].join(' '),
   inputSchema: z.object({
     propertyId: z.string().optional().describe('Property whose latest video you want'),
     jobId: z.string().optional().describe('Specific render job id'),
   }),
-  outputSchema: z.union([jobStatusShape, z.object({ error: z.string() })]),
+  outputSchema: z.union([jobStatusShape, z.object({ error: z.string(), limits: z.string() })]),
   execute: async ({ propertyId, jobId }, context) => {
     const tenantId = tenantIdFrom(context as ToolExecutionContext)
 
@@ -178,11 +206,15 @@ export const getPropertyVideoTool = createTool({
           durationSeconds: null,
           sentToClient: false,
           detail: null,
+          notes: [],
         }
       }
     }
 
-    return { error: 'No encuentro ningún vídeo para esa propiedad. Puedo generar uno si quieres.' }
+    return {
+      error: 'No encuentro ningún vídeo para esa propiedad. Puedo generar uno si quieres.',
+      limits: describeReelLimits(),
+    }
   },
 })
 

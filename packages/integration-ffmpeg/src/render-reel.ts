@@ -74,7 +74,7 @@ export async function renderPropertyReel(
   input: RenderReelInput,
 ): Promise<Result<RenderedReel, SafeError>> {
   if (input.segments.length === 0) {
-    return err(renderFailure('A reel needs at least one image.'))
+    return err(renderFailure('un reel necesita al menos una imagen.'))
   }
 
   const width = input.width ?? DEFAULTS.width
@@ -190,16 +190,26 @@ export async function renderPropertyReel(
 
   const stats = await stat(input.outputPath).catch(() => null)
   if (!stats || stats.size === 0) {
-    return err(renderFailure('The encoder produced no output file.'))
+    return err(renderFailure('ffmpeg terminó sin escribir ningún archivo de salida.'))
   }
 
   return ok({ path: input.outputPath, durationSeconds: totalSeconds, sizeBytes: stats.size })
 }
 
 /**
- * ffmpeg's own diagnostics are logged rather than returned: they name local
- * paths, and the caller's audience is a chat message.
+ * ffmpeg's diagnostics are logged in full and also summarised into the returned
+ * error: without them a failed render reaches the operator as "something went
+ * wrong". Local paths are stripped first, since the audience is a chat message.
  */
+function summariseFfmpegError(stderr: string, cwd: string): string {
+  const lines = stderr
+    .split('\n')
+    .map((line) => line.replaceAll(cwd, '').trim())
+    .filter((line) => line.length > 0)
+  const last = lines.at(-1)
+  return last ? last.slice(0, 300) : 'sin detalle del codificador'
+}
+
 function runFfmpeg(
   ffmpegPath: string,
   args: string[],
@@ -220,21 +230,36 @@ function runFfmpeg(
 
     const timer = setTimeout(() => {
       child.kill('SIGKILL')
-      finish(err(renderFailure('Video rendering timed out.')))
+      finish(
+        err(
+          renderFailure(
+            `ffmpeg no terminó en ${Math.round(timeoutMs / 1000)} s y se canceló el render.`,
+          ),
+        ),
+      )
     }, timeoutMs)
 
     child.stderr?.on('data', (chunk: Buffer) => {
       stderr = `${stderr}${chunk.toString()}`.slice(-4000)
     })
 
-    child.on('error', () => {
-      finish(err(renderFailure('ffmpeg is not available in this environment.')))
+    child.on('error', (error) => {
+      console.error('[ffmpeg] could not be spawned', error)
+      finish(
+        err(
+          renderFailure(
+            `no se pudo ejecutar ffmpeg en "${ffmpegPath}" (${(error as NodeJS.ErrnoException).code ?? error.message}); comprueba que está instalado y que VIDEO_FFMPEG_PATH apunta al binario.`,
+          ),
+        ),
+      )
     })
 
     child.on('close', (code) => {
       if (code === 0) return finish(ok(undefined))
       console.error(`[ffmpeg] exited with ${code}\n${stderr}`)
-      finish(err(renderFailure('Video rendering failed.')))
+      finish(
+        err(renderFailure(`ffmpeg salió con código ${code}: ${summariseFfmpegError(stderr, cwd)}`)),
+      )
     })
   })
 }
