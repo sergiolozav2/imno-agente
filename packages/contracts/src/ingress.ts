@@ -12,6 +12,8 @@ export const evolutionWebhookInputSchema = z.object({
   eventId: z.string().optional(),
   messageId: z.string().optional(),
   sender: z.string().min(1),
+  /** The line the event arrived on, as the provider reports it. */
+  connectedAccount: z.string().optional(),
   fromConnectedAccount: z.boolean(),
   occurredAt: z.string().optional(),
   text: z.string().optional(),

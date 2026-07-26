@@ -8,8 +8,9 @@
  *
  * Two fields are easy to get wrong and both are security-relevant:
  * the buyer is `data.key.remoteJid` (the envelope's own top-level `sender` is
- * the *connected account*, i.e. us), and `data.key.fromMe` is what marks an
- * outbound echo that must not be answered.
+ * the *connected account*, i.e. us — surfaced separately as `connectedAccount`,
+ * which is how we learn a tenant line's own number), and `data.key.fromMe` is
+ * what marks an outbound echo that must not be answered.
  */
 
 /** Pull the human-readable text out of Evolution's polymorphic message object. */
@@ -60,6 +61,7 @@ export function normalizeEvolutionWebhookPayload(raw: unknown): unknown {
     eventId: typeof key.id === 'string' ? key.id : undefined,
     messageId: typeof key.id === 'string' ? key.id : undefined,
     sender: (key.remoteJid as string | undefined) ?? (body.sender as string | undefined),
+    connectedAccount: body.sender as string | undefined,
     fromConnectedAccount: key.fromMe === true,
     occurredAt: (body.date_time as string | undefined) ?? messageTimestamp,
     text: extractMessageText(message),

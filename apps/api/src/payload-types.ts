@@ -148,6 +148,10 @@ export interface UserAuthOperations {
 export interface User {
   id: number;
   displayName?: string | null;
+  /**
+   * E.164 number this operator messages the platform line from. Identifies them on inbound.
+   */
+  whatsappPhone?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -308,6 +312,10 @@ export interface WhatsappInstance {
   externalInstanceId?: string | null;
   connectionState: 'open' | 'connecting' | 'close';
   webhookConfigured?: boolean | null;
+  /**
+   * The line's own number, learned from the first event Evolution delivers for it.
+   */
+  connectedNumber?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -459,6 +467,7 @@ export interface PayloadMigration {
  */
 export interface UsersSelect<T extends boolean = true> {
   displayName?: T;
+  whatsappPhone?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -608,6 +617,7 @@ export interface WhatsappInstancesSelect<T extends boolean = true> {
   externalInstanceId?: T;
   connectionState?: T;
   webhookConfigured?: T;
+  connectedNumber?: T;
   updatedAt?: T;
   createdAt?: T;
 }

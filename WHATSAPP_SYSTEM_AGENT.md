@@ -44,8 +44,9 @@ which is the only key Evolution accepts on `/instance/*`. Set
 `EVOLUTION_WEBHOOK_URL` and `EVOLUTION_WEBHOOK_SECRET` too, otherwise the line is
 created without a webhook: it can send but will never receive.
 
-The `system_whatsapp` table ships as a migration, so run `pnpm db:setup` (or
-`pnpm db:setup:remote`) once before the first `wa:connect`.
+The `system_whatsapp` table and the inbound-routing columns ship as migrations,
+so run `pnpm db:setup` (or `pnpm db:setup:remote`) once before the first
+`wa:connect`.
 
 ## Setting it up over SSH
 
@@ -108,11 +109,37 @@ connected WhatsApp yet, with no configuration on the agent side. The agent's
 legacy `.system-whatsapp.json` / `SYSTEM_WHATSAPP_INSTANCE` pin still overrides
 step 1 when present locally; it is not needed in a deployment.
 
-### Not wired yet
+### Inbound
 
-Inbound routing. `POST /api/webhooks/evolution` resolves the tenant from
-`whatsapp-instances` by instance name, and the system line has no tenant, so
-messages arriving on it are acknowledged and dropped. Making the system agent
-answer on this line needs a way to map an incoming phone number to an operator
-and their tenant — pairing the line and storing it, which is what this document
-covers, is the prerequisite for that.
+`POST /api/webhooks/evolution` serves both kinds of line. A tenant line names its
+owner structurally — the instance is registered to exactly one agency — but the
+platform line cannot, because every agency writes to the same number. So when an
+event arrives on the system instance, identity comes from the sender instead,
+resolved in `lib/operator-identity.ts`:
+
+1. The number an operator registered on their user account (`users.whatsappPhone`,
+   set from **Settings → Integraciones**). Deliberate, and works from a personal
+   phone.
+2. The number of the agency's own WhatsApp line
+   (`whatsapp-instances.connectedNumber`). Free — Evolution names the receiving
+   account on every event, so the first buyer message teaches us that number —
+   but it only covers agencies that have connected WhatsApp, and it identifies
+   the agency rather than a person, so the agent acts as that agency's owner.
+
+An unrecognised number is acknowledged and dropped: without a tenant there is no
+way to scope what the agent may touch.
+
+The turn then goes to the system agent, not the buyer agent, and the thread is
+stable per operator (`operator:<phone>`), so the assistant remembers the
+conversation across days.
+
+### The loop, and why the platform number is blacklisted
+
+An operator who writes to us from the phone that owns their bot line creates a
+cycle: our reply lands back on their own instance as an ordinary inbound message
+— `fromMe` is false there, since it is a different account — so the buyer agent
+would answer it, and we would answer that, forever.
+
+The webhook therefore drops any event whose sender is the platform's own
+`connectedNumber`, on any instance. Nothing the platform line says is ever a
+buyer message.

@@ -14,6 +14,28 @@ export function stripWhatsAppSuffix(raw: string): string {
 }
 
 /**
+ * Compare two WhatsApp-flavoured numbers for identity.
+ *
+ * The same line reaches us in several spellings — `+34600111222`, the bare
+ * digits Evolution dials, and a `34600111222@s.whatsapp.net` JID with an
+ * optional `:12` device marker — so comparison happens on digits alone. Both
+ * sides are already full international numbers wherever this is used.
+ */
+export function isSameWhatsappNumber(
+  a: string | null | undefined,
+  b: string | null | undefined,
+): boolean {
+  const left = toComparableDigits(a)
+  const right = toComparableDigits(b)
+  return left.length > 0 && left === right
+}
+
+function toComparableDigits(raw: string | null | undefined): string {
+  if (typeof raw !== 'string') return ''
+  return stripWhatsAppSuffix(raw).replace(/\D/g, '')
+}
+
+/**
  * Normalize a supported phone input into a single E.164 identity.
  *
  * WhatsApp/provider identifiers (`remoteJid`) are always full international

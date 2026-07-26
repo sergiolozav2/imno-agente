@@ -5,12 +5,13 @@ import { signInternalRequest } from '@imno/runtime-config'
  * Client for the Mastra agent runtime.
  *
  * The agent owns the model key and its own memory; the API owns the database and
- * message delivery. So this call carries only server-derived identity (tenant,
- * conversation, client) plus the buyer text, and gets back reply text — the API
- * remains the single writer of messages and delivery state.
+ * message delivery. So these calls carry only server-derived identity (tenant,
+ * conversation, client, user) plus the incoming text, and get back reply text —
+ * the API remains the single writer of messages and delivery state.
  */
 
 const CLIENT_REPLY_PATH = '/internal/agent/client-reply'
+const SYSTEM_CHAT_PATH = '/internal/agent/system-chat'
 const REQUEST_TIMEOUT_MS = 60_000
 
 export interface ClientReplyRequest {
@@ -34,14 +35,46 @@ export interface AgentClientConfig {
   secret: string
 }
 
+export interface SystemChatRequest {
+  tenantId: string
+  tenantSlug: string
+  userId: string
+  message: string
+  /** Continue an existing session; omit to start a new one. */
+  threadId?: string
+  language?: string
+}
+
+export interface SystemChatResponse {
+  text: string
+  threadId?: string
+  toolCalls?: string[]
+}
+
 export async function requestClientReply(
   config: AgentClientConfig,
   input: ClientReplyRequest,
 ): Promise<Result<ClientReplyResponse, SafeError>> {
+  return postToAgent<ClientReplyResponse>(config, CLIENT_REPLY_PATH, input)
+}
+
+/** One operator turn with the system agent, for the app UI or the platform line. */
+export async function requestSystemChat(
+  config: AgentClientConfig,
+  input: SystemChatRequest,
+): Promise<Result<SystemChatResponse, SafeError>> {
+  return postToAgent<SystemChatResponse>(config, SYSTEM_CHAT_PATH, input)
+}
+
+async function postToAgent<T extends { text: string }>(
+  config: AgentClientConfig,
+  path: string,
+  input: unknown,
+): Promise<Result<T, SafeError>> {
   const body = JSON.stringify(input)
   const signature = signInternalRequest(config.secret, {
     method: 'POST',
-    path: CLIENT_REPLY_PATH,
+    path,
     body,
   })
 
@@ -50,7 +83,7 @@ export async function requestClientReply(
 
   let response: Response
   try {
-    response = await fetch(`${config.baseUrl.replace(/\/$/, '')}${CLIENT_REPLY_PATH}`, {
+    response = await fetch(`${config.baseUrl.replace(/\/$/, '')}${path}`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -67,7 +100,7 @@ export async function requestClientReply(
     clearTimeout(timer)
   }
 
-  const parsed = (await response.json().catch(() => null)) as ClientReplyResponse | null
+  const parsed = (await response.json().catch(() => null)) as T | null
   if (!response.ok || !parsed || typeof parsed.text !== 'string') {
     return err({ code: ErrorCode.ModelFailure, message: 'The agent runtime returned no reply.' })
   }

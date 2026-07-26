@@ -37,6 +37,15 @@ export const WhatsappInstances: CollectionConfig = {
       defaultValue: 'close',
     },
     { name: 'webhookConfigured', type: 'checkbox', defaultValue: false },
+    {
+      name: 'connectedNumber',
+      type: 'text',
+      index: true,
+      admin: {
+        description:
+          "The line's own number, learned from the first event Evolution delivers for it.",
+      },
+    },
   ],
   indexes: [
     { fields: ['tenant'], unique: true },

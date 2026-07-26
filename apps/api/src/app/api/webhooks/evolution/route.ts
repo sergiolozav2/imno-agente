@@ -1,12 +1,25 @@
 import type { Payload } from 'payload'
-import { ErrorCode, evolutionWebhookInputSchema, httpForError } from '@imno/contracts'
-import { decideWebhook, normalizePhone, stripWhatsAppSuffix } from '@imno/domain'
+import {
+  type EvolutionWebhookInput,
+  ErrorCode,
+  evolutionWebhookInputSchema,
+  httpForError,
+} from '@imno/contracts'
+import {
+  decideWebhook,
+  isSameWhatsappNumber,
+  normalizePhone,
+  stripWhatsAppSuffix,
+} from '@imno/domain'
 import { normalizeEvolutionWebhookPayload } from '@imno/integration-evolution'
 import { loadEvolutionConfig } from '@imno/runtime-config'
 import { getPayloadClient } from '@/lib/payload-client'
 import { resolveTenantFromInstance } from '@/lib/instance-tenant'
+import { resolveOperatorFromPhone } from '@/lib/operator-identity'
 import { toId } from '@/lib/payload-ids'
 import { processInbound } from '@/lib/process-inbound'
+import { processOperatorInbound } from '@/lib/process-operator-inbound'
+import { readSystemWhatsapp } from '@/lib/system-whatsapp'
 
 /**
  * Evolution (WhatsApp) ingress.
@@ -16,6 +29,10 @@ import { processInbound } from '@/lib/process-inbound'
  * authenticated, accepted, non-echo event reaches persistence, and the
  * webhook-receipt unique key guarantees exactly one message and one work item
  * per provider event even under Evolution's retries.
+ *
+ * Past that gate the event takes one of two paths, depending on which line it
+ * arrived on: a buyer writing to an agency, or an agency operator writing to
+ * the platform's own line.
  */
 
 function jsonError(code: ErrorCode, status?: number): Response {
@@ -90,6 +107,70 @@ async function upsertConversation(
   return String(created.id)
 }
 
+/**
+ * Store a tenant line's own number the first time we see it. Best-effort: the
+ * buyer's message matters more than the bookkeeping, so a failure is swallowed.
+ */
+async function rememberInstanceNumber(
+  payload: Payload,
+  instanceId: string,
+  connectedAccount: string,
+  countryCode: string,
+): Promise<void> {
+  const normalized = normalizePhone(stripWhatsAppSuffix(connectedAccount), countryCode)
+  if (!normalized.ok) return
+  await payload
+    .update({
+      collection: 'whatsapp-instances',
+      id: instanceId,
+      overrideAccess: true,
+      data: { connectedNumber: normalized.value.e164 },
+    })
+    .catch(() => null)
+}
+
+/**
+ * Inbound on the platform's own line. The instance identifies no tenant here —
+ * it is ours — so identity comes from the sender instead. An unrecognised
+ * number is acknowledged and dropped: we cannot scope an agent turn without
+ * knowing whose data it may touch.
+ */
+async function operatorInbound(
+  payload: Payload,
+  input: EvolutionWebhookInput,
+  eventKey: string,
+  instanceName: string,
+): Promise<Response> {
+  const text = (input.text ?? '').trim()
+  if (text.length === 0) {
+    return Response.json({ acknowledged: true, ignored: 'empty-text' }, { status: 200 })
+  }
+
+  // A provider JID is already a full international number, so the country
+  // context below is only a formality for this parse.
+  const phoneResult = normalizePhone(stripWhatsAppSuffix(input.sender), 'ES')
+  if (!phoneResult.ok) return jsonError(ErrorCode.InvalidPhone)
+  const operatorPhone = phoneResult.value.e164
+
+  const operator = await resolveOperatorFromPhone(payload, operatorPhone)
+  if (!operator) {
+    return Response.json({ acknowledged: true, ignored: 'unknown-operator' }, { status: 200 })
+  }
+
+  const outcome = await processOperatorInbound(payload, {
+    operator,
+    eventKey,
+    operatorText: text,
+    operatorPhone,
+    instanceName,
+  })
+
+  if (outcome.state === 'deduplicated') {
+    return Response.json({ acknowledged: true, deduplicated: true }, { status: 200 })
+  }
+  return Response.json({ acknowledged: true }, { status: 200 })
+}
+
 export async function POST(req: Request): Promise<Response> {
   try {
     const raw = await req.text()
@@ -119,10 +200,32 @@ export async function POST(req: Request): Promise<Response> {
     }
 
     const payload = await getPayloadClient()
+    const systemLine = await readSystemWhatsapp(payload)
+
+    // Loop breaker. An agency operator writes to us from the same phone that
+    // owns their bot line, so our reply lands back on their instance as an
+    // ordinary inbound message — `fromMe` is false there, and the buyer agent
+    // would answer it, which we would answer in turn, forever. Nothing the
+    // platform line says is ever a buyer message.
+    if (isSameWhatsappNumber(input.sender, systemLine.connectedNumber)) {
+      return Response.json({ acknowledged: true, ignored: 'system-line' }, { status: 200 })
+    }
+
+    if (systemLine.instanceName && input.instanceName === systemLine.instanceName) {
+      return operatorInbound(payload, input, decision.eventKey, systemLine.instanceName)
+    }
+
     const resolved = await resolveTenantFromInstance(payload, input.instanceName)
     // Non-disclosing 404 when the instance is not registered to any tenant.
     if (!resolved.ok) return jsonError(ErrorCode.ResourceNotFound)
     const { context, instanceId, countryCode } = resolved.value
+
+    // Evolution names the receiving account on every event, so the first buyer
+    // message teaches us a tenant line's own number — which is what lets us
+    // recognise that agency later when they write to the platform line.
+    if (!resolved.value.connectedNumber && input.connectedAccount) {
+      await rememberInstanceNumber(payload, instanceId, input.connectedAccount, countryCode)
+    }
 
     const phoneResult = normalizePhone(stripWhatsAppSuffix(input.sender), countryCode)
     if (!phoneResult.ok) return jsonError(ErrorCode.InvalidPhone)

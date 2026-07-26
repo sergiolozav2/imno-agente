@@ -17,6 +17,8 @@ export interface ResolvedInstance {
   instanceId: string
   /** Tenant country, used as the fallback context for phone normalization. */
   countryCode: string
+  /** The line's own number, once it has been learned. */
+  connectedNumber: string | null
 }
 
 export async function resolveTenantFromInstance(
@@ -56,6 +58,10 @@ export async function resolveTenantFromInstance(
     },
     instanceId: String(instance.id),
     countryCode: String(doc.countryCode ?? 'ES'),
+    connectedNumber:
+      typeof instance.connectedNumber === 'string' && instance.connectedNumber.length > 0
+        ? instance.connectedNumber
+        : null,
   })
 }
 

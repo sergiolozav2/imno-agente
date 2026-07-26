@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizePhone, stripWhatsAppSuffix } from './phone'
+import { isSameWhatsappNumber, normalizePhone, stripWhatsAppSuffix } from './phone'
 
 describe('normalizePhone', () => {
   it('normalizes a national number using tenant country context', () => {
@@ -48,5 +48,23 @@ describe('normalizePhone', () => {
     expect(a.ok && b.ok && a.value.e164 === b.value.e164).toBe(true)
     // Per-tenant uniqueness is enforced at the persistence layer via
     // (tenantId, e164); the normalizer itself is tenant-agnostic on output.
+  })
+})
+
+describe('isSameWhatsappNumber', () => {
+  it('matches the same line across E.164, bare digits and JID spellings', () => {
+    expect(isSameWhatsappNumber('+34600123456', '34600123456')).toBe(true)
+    expect(isSameWhatsappNumber('+34600123456', '34600123456@s.whatsapp.net')).toBe(true)
+    expect(isSameWhatsappNumber('+34600123456', '34600123456:12@s.whatsapp.net')).toBe(true)
+  })
+
+  it('does not match different lines', () => {
+    expect(isSameWhatsappNumber('+34600123456', '+34600123457')).toBe(false)
+  })
+
+  it('treats missing input as no match, never as a wildcard', () => {
+    expect(isSameWhatsappNumber(null, null)).toBe(false)
+    expect(isSameWhatsappNumber('', '')).toBe(false)
+    expect(isSameWhatsappNumber('+34600123456', undefined)).toBe(false)
   })
 })

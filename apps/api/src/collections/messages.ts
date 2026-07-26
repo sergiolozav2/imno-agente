@@ -60,4 +60,7 @@ export const Messages: CollectionConfig = {
       options: ['pending', 'sent', 'failed', 'unknown'],
     },
   ],
+  // The dedup gate for ingress paths that have no webhook receipt to collide on
+  // (the system line has no `whatsapp-instances` row to key a receipt against).
+  indexes: [{ fields: ['idempotencyKey'], unique: true }],
 }
