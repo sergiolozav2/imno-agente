@@ -8,6 +8,7 @@ import {
   IconMap,
   IconBot,
   IconChat,
+  IconCheck,
 } from '@/components/icons'
 
 const STATS = [
@@ -15,6 +16,12 @@ const STATS = [
   { value: '24/7', label: 'Atención automática por WhatsApp' },
   { value: '<1 min', label: 'De propiedad a reel para redes' },
   { value: '1 panel', label: 'Propiedades, leads y contenido' },
+]
+
+const MAP_POINTS = [
+  'Medianas de $/m² por zona, barrio y tipo de inmueble',
+  'Filtros por precio, superficie mínima y dormitorios',
+  'Capas de calor y puntos sobre 840+ avisos activos',
 ]
 
 const STEPS = [
@@ -90,7 +97,7 @@ export default function HomePage() {
               <span className="lp-shot-url">app.imnoagente.com/mapa-de-precios</span>
             </div>
             <Image
-              src="/landing/full-image-heatmap-cost-buildings.png"
+              src="/landing/full-image-heatmap-cost-buildings.webp"
               alt="Panel de Imno Agente mostrando el mapa de calor de precios por m²"
               width={1910}
               height={936}
@@ -115,7 +122,7 @@ export default function HomePage() {
 
       <section className="lp-section lp-section-alt">
         <div className="lp-shell">
-          <div className="lp-section-head lp-center lp-center">
+          <div className="lp-section-head lp-center">
             <span className="lp-eyebrow">Todo en uno</span>
             <h2 className="lp-h2">Menos pestañas. Más operaciones cerradas.</h2>
             <p>
@@ -136,7 +143,7 @@ export default function HomePage() {
               </p>
               <div className="lp-tile-media">
                 <Image
-                  src="/landing/agentic-chat-sending-whatsapp-message.png"
+                  src="/landing/agentic-chat-sending-whatsapp-message.webp"
                   alt="Asistente enviando una propiedad por WhatsApp a un cliente"
                   width={1606}
                   height={936}
@@ -155,7 +162,7 @@ export default function HomePage() {
               </p>
               <div className="lp-tile-media lp-tile-media-crop">
                 <Image
-                  src="/landing/whatsapp-integration.png"
+                  src="/landing/whatsapp-integration.webp"
                   alt="Integración de WhatsApp en el panel"
                   width={1039}
                   height={936}
@@ -173,7 +180,7 @@ export default function HomePage() {
               </p>
               <div className="lp-tile-media lp-tile-media-crop">
                 <Image
-                  src="/landing/kanban-clients-management.png"
+                  src="/landing/kanban-clients-management.webp"
                   alt="Kanban de clientes por temperatura"
                   width={1606}
                   height={936}
@@ -192,7 +199,7 @@ export default function HomePage() {
               </p>
               <div className="lp-tile-media">
                 <Image
-                  src="/landing/content-generation-for-properties.png"
+                  src="/landing/content-generation-for-properties.webp"
                   alt="Generación de contenido para propiedades"
                   width={1606}
                   height={936}
@@ -204,19 +211,35 @@ export default function HomePage() {
       </section>
 
       <section className="lp-section" id="mapa">
-        <div className="lp-shell">
-          <div className="lp-section-head lp-center">
-            <span className="lp-eyebrow">Inteligencia de mercado</span>
-            <h2 className="lp-h2">Sabe cuánto vale cada zona antes de tasar.</h2>
-            <p>
-              Mapa de calor de precio por m² con datos reales del mercado, filtros por dormitorios,
-              superficie y zona, y medianas al instante.
-            </p>
-          </div>
-          <div className="lp-actions">
+        <div className="lp-shell lp-split">
+          <div>
+            <div className="lp-section-head">
+              <span className="lp-eyebrow">Inteligencia de mercado</span>
+              <h2 className="lp-h2">Sabe cuánto vale cada zona antes de tasar</h2>
+              <p>
+                Mapa de calor de precio por m² con avisos reales del mercado, para justificar cada
+                precio con datos delante del cliente.
+              </p>
+            </div>
+            <div className="lp-checks">
+              {MAP_POINTS.map((p) => (
+                <span key={p} className="lp-check">
+                  <IconCheck width={17} height={17} />
+                  {p}
+                </span>
+              ))}
+            </div>
             <Link href="/map-preview" className="btn btn-primary btn-lg">
               <IconMap width={18} height={18} /> Abrir mapa de precios
             </Link>
+          </div>
+          <div className="lp-split-media">
+            <Image
+              src="/landing/heatmap-zoom.webp"
+              alt="Mapa de calor de precios por metro cuadrado en Santa Cruz de la Sierra"
+              width={900}
+              height={900}
+            />
           </div>
         </div>
       </section>

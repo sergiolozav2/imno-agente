@@ -2538,8 +2538,8 @@ button.integration-card:focus-visible {
       color-mix(in srgb, #7dd3fc 32%, transparent) 0%,
       transparent 72%
     );
-  filter: blur(20px);
-  opacity: 0.75;
+  filter: blur(18px);
+  opacity: 0.95;
 }
 .lp-glow::after {
   content: '';
@@ -2795,12 +2795,15 @@ button.integration-card:focus-visible {
 }
 .lp-tile p {
   margin-top: 0.4375rem;
+  margin-bottom: 1.25rem;
   font-size: 0.875rem;
   line-height: 1.6;
   color: var(--color-text-muted);
 }
 .lp-tile-media {
   margin: 1.25rem -1.5rem -1.5rem;
+  margin-top: auto;
+  height: 240px;
   border-top: 1px solid var(--color-border);
   background: var(--color-surface-2);
   overflow: hidden;
@@ -2808,15 +2811,50 @@ button.integration-card:focus-visible {
 .lp-tile-media img {
   display: block;
   width: 100%;
-  height: auto;
-}
-.lp-tile-media-crop {
-  height: 210px;
-}
-.lp-tile-media-crop img {
   height: 100%;
   object-fit: cover;
   object-position: top left;
+}
+
+/* ---------- split (text + media) ---------- */
+.lp-split {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 3.5rem;
+  align-items: center;
+}
+.lp-split .lp-section-head {
+  margin-bottom: 1.75rem;
+}
+.lp-checks {
+  display: grid;
+  gap: 0.6875rem;
+  margin-bottom: 1.75rem;
+}
+.lp-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  font-size: 0.9375rem;
+  color: var(--color-text);
+}
+.lp-check svg {
+  flex-shrink: 0;
+  margin-top: 0.1875rem;
+  color: var(--color-brand-600);
+}
+.lp-split-media {
+  position: relative;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: 0 30px 60px -30px rgba(5, 79, 49, 0.35);
+  overflow: hidden;
+}
+.lp-split-media img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 /* ---------- steps ---------- */
@@ -2929,6 +2967,10 @@ button.integration-card:focus-visible {
   }
   .lp-steps {
     grid-template-columns: 1fr;
+  }
+  .lp-split {
+    grid-template-columns: 1fr;
+    gap: 2rem;
   }
   .lp-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -2,6 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@imno/contracts', '@imno/domain'],
+  // Landing assets are pre-compressed webp; skip the optimizer (avoids the sharp dependency).
+  images: { unoptimized: true },
   experimental: {
     // Property creation uploads images and GLB models in a single action.
     serverActions: {
