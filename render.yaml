@@ -54,7 +54,7 @@ services:
   - type: web
     name: imno-agent
     runtime: docker
-    plan: starter
+    plan: pro plus
     region: oregon
     dockerfilePath: ./apps/agent/Dockerfile
     dockerContext: .
